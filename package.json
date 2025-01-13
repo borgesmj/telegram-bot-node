@@ -1,0 +1,20 @@
+{
+  "name": "telegram-bot-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/borgesmj/telegram-bot-node.git"
+  },
+  "keywords": [],
+  "author": "Miguel Borges",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/borgesmj/telegram-bot-node/issues"
+  },
+  "homepage": "https://github.com/borgesmj/telegram-bot-node#readme"
+}
