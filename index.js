@@ -1,8 +1,9 @@
 //* importamos dotenv para extraer la variable de entorno
-require("dotenv").config();
+import dotenv from "dotenv"
+dotenv.config()
 
-// * Create a bot that uses 'polling' to fetch new updates
-const TelegramBotAPI = require("node-telegram-bot-api");
+// * importamos Telegram-bot-api para utilizar la API de Telegram
+import TelegramBotAPI from "node-telegram-bot-api";
 
 // * Generamos una constante con el token del bot
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
