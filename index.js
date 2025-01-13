@@ -1,7 +1,8 @@
 //* importamos dotenv para extraer la variable de entorno
 import dotenv from "dotenv"
 dotenv.config()
-
+// * importando las funciones de manejadores y respuetas
+import commandHandler from "./src/handlers/commandHandler.js";
 // * importamos Telegram-bot-api para utilizar la API de Telegram
 import TelegramBotAPI from "node-telegram-bot-api";
 
@@ -19,7 +20,7 @@ const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 
 bot.onText(/\/(\w+)/, (msg, match) => {
   const command = match[1];
-  bot.sendMessage(msg.chat.id, `Es un comando: ${command}`);
+  commandHandler(command, bot, msg)
 });
 
 bot.on("message", (msg) => {
