@@ -53,7 +53,7 @@ export async function handleUserMessages(
       break;
     case "waiting_for_new_first_name":
       userProfile.first_name = msg.text;
-      await messageSender(msg.from.id, botReplies[2], bot);
+      await messageSender(msg.from.id, botReplies[2].replace("%username", msg.text), bot);
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender(msg.from.id, botReplies[4], bot);
       userStates[msg.from.id] = { state: STATES.WAITING_FOR_EMAIL };
