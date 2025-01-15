@@ -27,8 +27,9 @@ export async function createNewUser(chatId, userProfile) {
       telegram_id: chatId,
       created_at: new Date(),
       email: userProfile.email,
+      currency: userProfile.currency,
     });
   if (error) {
-    console.log("Error creando un usuario nuevo ", error);
+    console.log("Error creando un usuario nuevo a la base de datos", error);
   }
 }

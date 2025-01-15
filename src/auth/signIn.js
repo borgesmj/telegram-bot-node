@@ -15,4 +15,10 @@ export default async function signInUser(userProfile) {
       },
     },
   });
+  if (error){
+    console.log("Error al crear el usuario ", error);
+    return
+  } else {
+    console.log("Usuario creado con exito");
+  }
 }

@@ -1,4 +1,4 @@
-import { botReplies } from "../messages/replies.js";
+import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
 import { fetchUsers, createNewUser } from "../database/databaseHandlers.js";
 import { changeName } from "./MessagesHandler.js";
@@ -27,6 +27,7 @@ export default async function commandHandler(
         newUserProfile.username = msg.from.username;
         //await createNewUser(newUserProfile);
         await messageSender(chatId, botReplies[0], bot);
+        await new Promise(resolve => setTimeout(resolve, 200)); 
         await messageSender(
           chatId,
           botReplies[1].replace("%username", msg.from.first_name),
@@ -42,6 +43,7 @@ export default async function commandHandler(
         botReplies[2].replace("%username", msg.from.first_name),
         bot
       );
+      await new Promise(resolve => setTimeout(resolve, 300)); 
       await messageSender(chatId, botReplies[4], bot);
       userStates[chatId] = {state: STATES.WAITING_FOR_EMAIL};
       return;
