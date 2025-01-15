@@ -1,7 +1,15 @@
 import { botReplies } from "../messages/replies.js";
 import messageSender from "../senders/messageSender.js";
 import { fetchUsers, createNewUser } from "../database/databaseHandlers.js";
-export default async function commandHandler(command, bot, msg) {
+import { changeName } from "./MessagesHandler.js";
+export default async function commandHandler(
+  command,
+  bot,
+  msg,
+  newUserProfile,
+  userStates,
+  STATES
+) {
   const chatId = msg.chat.id;
   switch (command) {
     case "start":
@@ -13,15 +21,34 @@ export default async function commandHandler(command, bot, msg) {
         }
       });
       if (!isUser) {
-        messageSender(
+        newUserProfile.telegram_id = msg.from.id;
+        newUserProfile.first_name = msg.from.first_name;
+        newUserProfile.last_name = msg.from.last_name;
+        newUserProfile.username = msg.from.username;
+        //await createNewUser(newUserProfile);
+        await messageSender(chatId, botReplies[0], bot);
+        await messageSender(
           chatId,
-          botReplies[0].replace("%username", msg.from.first_name),
+          botReplies[1].replace("%username", msg.from.first_name),
           bot
         );
-        createNewUser(chatId, msg.chat.first_name);
-      } else{
-        messageSender(chatId, "Ya estás registrado", bot)
+      } else {
+        messageSender(chatId, "Ya estás registrado", bot);
       }
+      return;
+    case "EstaBienAsi":
+      await messageSender(
+        chatId,
+        botReplies[2].replace("%username", msg.from.first_name),
+        bot
+      );
+      await messageSender(chatId, botReplies[4], bot);
+      userStates[chatId] = {state: STATES.WAITING_FOR_EMAIL};
+      return;
+    case "Cambiemoslo":
+      userStates[chatId] = { state: STATES.WAITING_FOR_NEW_FIRST_NAME };
+      await messageSender(chatId, botReplies[3], bot);
+      return;
     default:
       break;
   }

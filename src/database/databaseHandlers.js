@@ -10,15 +10,25 @@ export async function fetchUsers() {
   if (data) {
     return data;
   } else {
-    console.log(error);
+    console.log(
+      "error realizando fetch de los users de la base de datos ",
+      error
+    );
   }
 }
 
-export async function createNewUser(chatId, first_name ) {
+export async function createNewUser(chatId, userProfile) {
   const { error } = await supabase
     .from("users")
-    .insert({ first_name: first_name, telegram_id: chatId, created_at: new Date() });
-    if (error) {
-      console.log(error);
-    }
+    .insert({
+      first_name: userProfile.first_name,
+      last_name: userProfile.last_name,
+      telegram_username: userProfile.username,
+      telegram_id: chatId,
+      created_at: new Date(),
+      email: userProfile.email,
+    });
+  if (error) {
+    console.log("Error creando un usuario nuevo ", error);
+  }
 }
