@@ -46,7 +46,7 @@ export async function handleUserMessages(
       break;
     case "waiting_for_user_currency":
       userProfile.currency = msg.text;
-      await signInUser(userProfile);
+      //await signInUser(userProfile);
       await createNewUser(msg.from.id, userProfile);
       await messageSender(msg.from.id, botReplies[5], bot);
       userStates[msg.from.id] = { state: STATES.COMPLETED };
