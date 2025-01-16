@@ -1,6 +1,6 @@
 import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
-import { fetchUsers, createNewUser } from "../database/databaseHandlers.js";
+import { fetchUsers, createNewUser, fetchCurrentUser } from "../database/databaseHandlers.js";
 import { changeName } from "./MessagesHandler.js";
 export default async function commandHandler(
   command,
@@ -8,7 +8,8 @@ export default async function commandHandler(
   msg,
   newUserProfile,
   userStates,
-  STATES
+  STATES,
+  currentUser
 ) {
   const chatId = msg.chat.id;
   switch (command) {
@@ -34,7 +35,8 @@ export default async function commandHandler(
           bot
         );
       } else {
-        messageSender(chatId, "Ya estás registrado", bot);
+        currentUser = await fetchCurrentUser(msg.from.id)
+        await messageSender(chatId, botReplies[10].replace("%username", currentUser.first_name), bot);
       }
       return;
     case "EstaBienAsi":

@@ -18,5 +18,7 @@ export const botReplies = [
   // ! 8
   `🤖\n\nColoca la moneda que quieras usar, por ejemplo: $ o Є`,
   // ! 9
-  `🤖\n\nAun no se estoy programado para escuchar notas de voz, por favor, introduce un texto`
+  `🤖\n\nAun no se estoy programado para escuchar notas de voz, por favor, introduce un texto`,
+  // ! 10
+  `🤖\n\nBienvenido de vuelta %username, haz click en /menu para ver el menu principal`,
 ];

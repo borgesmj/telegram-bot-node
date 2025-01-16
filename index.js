@@ -35,9 +35,10 @@ const STATES = {
 };
 
 let newUserProfile = {};
+let currentUser = {}
 bot.onText(/\/(\w+)/, (msg, match) => {
   const command = match[1];
-  commandHandler(command, bot, msg, newUserProfile, userStates, STATES);
+  commandHandler(command, bot, msg, newUserProfile, userStates, STATES, currentUser);
 });
 
 bot.on("message", (msg) => {
@@ -45,7 +46,7 @@ bot.on("message", (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;
   }
-  handleUserMessages(bot, msg, newUserProfile, userStates, STATES)
+  handleUserMessages(bot, msg, newUserProfile, userStates, STATES, currentUser)
 });
 
 bot.on("polling_error", (msg) => console.log(msg));

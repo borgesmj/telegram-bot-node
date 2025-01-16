@@ -18,18 +18,32 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  const { error } = await supabase
-    .from("users")
-    .insert({
-      first_name: userProfile.first_name,
-      last_name: userProfile.last_name,
-      telegram_username: userProfile.username,
-      telegram_id: chatId,
-      created_at: new Date(),
-      email: userProfile.email,
-      currency: userProfile.currency,
-    });
+  const { error } = await supabase.from("users").insert({
+    first_name: userProfile.first_name,
+    last_name: userProfile.last_name,
+    telegram_username: userProfile.username,
+    telegram_id: chatId,
+    created_at: new Date(),
+    email: userProfile.email,
+    currency: userProfile.currency,
+  });
   if (error) {
     console.log("Error creando un usuario nuevo a la base de datos", error);
+  }
+}
+
+export async function fetchCurrentUser(telegram_id) {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("telegram_id", telegram_id);
+    if (error) {
+      throw error
+    } else {
+      return data[0]
+    }
+  } catch (error) {
+    console.log("Error extrayendo este usuario", error)
   }
 }
