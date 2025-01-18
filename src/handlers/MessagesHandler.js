@@ -7,6 +7,7 @@ import {
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
+import addNewCategory from "../utils/addNewCategory.js";
 import { validateEmail, validateText } from "../utils/validators.js";
 
 export function changeName(userProfile, msg) {
@@ -76,21 +77,10 @@ export async function handleUserMessages(
       userStates[msg.from.id] = { state: STATES.WAITING_FOR_EMAIL };
       break;
     case "waiting_for_user_income_categories":
-      newTransactionCategory.name = msg.text;
-      const checkText = await validateText(msg.text)
-      if(!checkText.success){
-        await messageSender(msg.from.id, checkText.error, bot)
-        return;
-      }
-      const currentUserId = await fetchCurrentUserId(msg.from.id)
-      newTransactionCategory.user_id = currentUserId
-      const insertNewCategory = await insertNewTransactionCategory(newTransactionCategory)
-      if(!insertNewCategory.success){
-        //await messageSender(msg.from.id, insertNewCategory.error, bot)
-        console.log('error, desde message hanlder')
-      } else {
-        await messageSender(msg.from.id, botReplies[11], bot)
-      }
+      addNewCategory(newTransactionCategory, msg, bot);
+      break;
+    case "waiting_for_user_withdraw_categories":
+      addNewCategory(newTransactionCategory, msg, bot);
       break;
     default:
       break;

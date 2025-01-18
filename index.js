@@ -32,6 +32,7 @@ const STATES = {
   WAITING_FOR_EMAIL: "waiting_for_email",
   WAITING_FOR_USER_CURRENCY: "waiting_for_user_currency",
   WAITING_FOR_USER_INCOME_CATEGORIES: "waiting_for_user_income_categories",
+  WAITING_FOR_USER_WITHDRAW_CATEGORIES: "waiting_for_user_withdraw_categories",
   WAITING_FOR_NAME: "waiting_for_name",
   WAITING_FOR_AMOUNT: "waiting_for_amount",
   WAITING_FOR_TYPE: "waiting_for_type",
