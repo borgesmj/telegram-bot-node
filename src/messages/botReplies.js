@@ -10,7 +10,7 @@ export const botReplies = [
   //! 4
   `🤖\n\nAhora dame, por favor, tu correo electronico completo\n\nEjemplo: correo@mail.com`,
   //! 5
-  `🤖\n\nTu perfil ya fué guardado, lo puedes ver en cualquier momento a traves de la opcion /perfil.`,
+  `🤖\n\nTu perfil ya fué guardado, lo puedes ver en cualquier momento a traves de la opcion /perfil. Ahora vamos a configurar las categorías de tus movimientos.`,
   // ! 6
   `🤖\n\nTe envié un correo electrónico de confirmación a %email. Esto te será necesario para cuando quieras entrar a la página web.`,
   // ! 7
@@ -21,4 +21,6 @@ export const botReplies = [
   `🤖\n\nAun no se estoy programado para escuchar notas de voz, por favor, introduce un texto`,
   // ! 10
   `🤖\n\nBienvenido de vuelta %username, haz click en /menu para ver el menu principal`,
+  // ! 11
+  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, comenzaremos por los **INGRESOS**, por ejemplo `Salario`, `Freelance`"
 ];

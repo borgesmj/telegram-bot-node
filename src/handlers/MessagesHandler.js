@@ -49,6 +49,7 @@ export async function handleUserMessages(
       //await signInUser(userProfile);
       await createNewUser(msg.from.id, userProfile);
       await messageSender(msg.from.id, botReplies[5], bot);
+      await messageSender(msg.from.id, botReplies[11], bot);
       userStates[msg.from.id] = { state: STATES.COMPLETED };
       break;
     case "waiting_for_new_first_name":
