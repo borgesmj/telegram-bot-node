@@ -22,5 +22,7 @@ export const botReplies = [
   // ! 10
   `🤖\n\nBienvenido de vuelta %username, haz click en /menu para ver el menu principal`,
   // ! 11
-  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, comenzaremos por los **INGRESOS**, por ejemplo `Salario`, `Freelance`"
+  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, comenzaremos por los **INGRESOS**, por ejemplo `Salario`, `Freelance`\n\nPara finalizar, haz click en /ConfigurarEgresos",
+  // ! 12
+  ""
 ];

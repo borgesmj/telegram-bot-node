@@ -39,11 +39,52 @@ export async function fetchCurrentUser(telegram_id) {
       .select("*")
       .eq("telegram_id", telegram_id);
     if (error) {
-      throw error
+      throw error;
     } else {
-      return data[0]
+      return data[0];
     }
   } catch (error) {
-    console.log("Error extrayendo este usuario", error)
+    console.log("Error extrayendo este usuario", error);
+  }
+}
+
+export async function fetchCurrentUserId(telegram_id) {
+  let userId = "";
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("telegram_id", telegram_id);
+    if (error) {
+      throw error;
+    } else {
+      if (data.length < 0) {
+        throw new Error("No se encontro el usuario");
+      } else {
+        userId = data[0].id;
+        return userId;
+      }
+    }
+  } catch (error) {
+    console.log("Error extrayendo este usuario", error);
+  }
+}
+
+export async function insertNewTransactionCategory(newTransactionCategory) {
+  console.log(newTransactionCategory)
+  try {
+    const { error } = await supabase.from("categories").insert({
+      name: newTransactionCategory.name,
+      user_id: newTransactionCategory.user_id,
+      type: newTransactionCategory.type,
+    });
+    if (error) {
+      throw error;
+    } else {
+      return { success: true, error: "" };
+    }
+  } catch (error) {
+    console.log("Error insertando nueva categoria", error);
+    return { success: false, error: error };
   }
 }
