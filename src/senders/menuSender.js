@@ -1,6 +1,6 @@
 export default function sendMenu(chatId, bot) {
   try {
-    bot.sendMessage(chatId, "Menu Principal", {
+    bot.sendMessage(chatId, "*Menu Principal* 📋", {
       reply_markup: {
         inline_keyboard: [
           [{ text: "Nuevo Ingreso", callback_data: "new_income" }],
@@ -11,9 +11,9 @@ export default function sendMenu(chatId, bot) {
           [{ text: "Mi Perfil", callback_data: "my_profile" }],
           [{ text: "Info de este bot", callback_data: "about_bot" }],
         ],
-      },
+      }, parse_mode: "Markdown",
     });
   } catch (error) {
-    console.log("Errior al enviar el menu principal");
+    console.log("Error al enviar el menu principal: ", error);
   }
 }

@@ -8,8 +8,8 @@ import {
   insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
+import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
-import sendMenu from "../senders/sendMenu.js";
 import sendSticker from "../senders/stickerSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
 import {

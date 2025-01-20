@@ -34,5 +34,14 @@ export const botReplies = [
   // ! 16
   "🤖\n\nAhora configuremos el monto inicial de tus ahorros. Escribe el numero completo sin comas. \n\nSi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`\n\nEn caso de que no tengas, escribe 0",
   // ! 17
-  "🤖\n\nTu perfil está completo, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal."
+  "🤖\n\nTu perfil está completo, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal.",
+  // ! 18
+  `*Perfil del usuario 👤*
+
+  👤 *Nombres:* $userFirstName  
+  👤 *Apellidos:* $userLastName 
+  📧 *E-mail:* $userEmail  
+  📱 *Telegram:* $username 
+  💲 *Moneda predeterminada:* $userCurrency
+  `
 ];

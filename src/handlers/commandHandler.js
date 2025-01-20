@@ -6,7 +6,7 @@ import {
   fetchCurrentUser,
 } from "../database/databaseHandlers.js";
 import { changeName } from "./MessagesHandler.js";
-import sendMenu from "../senders/sendMenu.js";
+import sendMenu from "../senders/menuSender.js";
 export default async function commandHandler(
   command,
   bot,
