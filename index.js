@@ -42,9 +42,9 @@ const STATES = {
 let newUserProfile = {};
 let currentUser = {};
 let newTransactionCategory = {};
-bot.onText(/\/(\w+)/, (msg, match) => {
+bot.onText(/\/(\w+)/, async (msg, match) => {
   const command = match[1];
-  commandHandler(
+  await commandHandler(
     command,
     bot,
     msg,
@@ -56,9 +56,9 @@ bot.onText(/\/(\w+)/, (msg, match) => {
   );
 });
 
-bot.on("message", (msg) => {
+bot.on("message", async (msg) => {
   try {
-    currentUser = fetchCurrentUser(msg.from.id);
+    currentUser = await fetchCurrentUser(msg.from.id);
   } catch (error) {
     console.log("error haciendo fetch de current user desde index.js: ", error);
   }
@@ -66,7 +66,7 @@ bot.on("message", (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;
   }
-  handleUserMessages(
+  await handleUserMessages(
     bot,
     msg,
     newUserProfile,
