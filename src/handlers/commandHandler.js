@@ -6,6 +6,7 @@ import {
   fetchCurrentUser,
 } from "../database/databaseHandlers.js";
 import { changeName } from "./MessagesHandler.js";
+import sendMenu from "../senders/sendMenu.js";
 export default async function commandHandler(
   command,
   bot,
@@ -75,6 +76,9 @@ export default async function commandHandler(
       await messageSender(chatId, botReplies[14], bot);
       userStates[chatId] = { state: STATES.WAITING_FOR_INITIAL_BALANCE };
       return;
+    case "menu":
+      await sendMenu(msg.from.id, bot);
+      break;
     default:
       break;
   }

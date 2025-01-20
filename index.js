@@ -11,7 +11,11 @@ import {
 } from "./src/handlers/MessagesHandler.js";
 import messageSender from "./src/senders/messageSender.js";
 //import { botReplies } from "./src/messages/replies.js";
-import { createNewUser, fetchCurrentUser } from "./src/database/databaseHandlers.js";
+import {
+  createNewUser,
+  fetchCurrentUser,
+} from "./src/database/databaseHandlers.js";
+import { handleUserQueries } from "./src/handlers/queryHandler.js";
 //import signInUser from "./src/handlers/signInUser.js";
 
 // * Generamos una constante con el token del bot
@@ -44,8 +48,7 @@ const STATES = {
 let newUserProfile = {};
 let currentUser = {};
 let newTransactionCategory = {};
-let newUserRecord = {}
-userStates[896160399] = { state: STATES.WAITING_FOR_INITIAL_BALANCE };
+let newUserRecord = {};
 
 bot.onText(/\/(\w+)/, async (msg, match) => {
   try {
@@ -89,4 +92,7 @@ bot.on("message", async (msg) => {
   );
 });
 
+bot.on("callback_query", async (query) => {
+  handleUserQueries(query, bot);
+});
 bot.on("polling_error", (msg) => console.log(msg));

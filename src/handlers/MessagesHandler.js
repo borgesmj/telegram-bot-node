@@ -9,6 +9,7 @@ import {
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
+import sendMenu from "../senders/sendMenu.js";
 import sendSticker from "../senders/stickerSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
 import {
@@ -131,6 +132,8 @@ export async function handleUserMessages(
       );
       await messageSender(msg.from.id, botReplies[17], bot);
       userStates[msg.from.id] = { state: STATES.COMPLETED };
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await sendMenu(msg.from.id, bot)
       break;
     default:
       break;
