@@ -65,7 +65,15 @@ export default async function commandHandler(
     case "ConfigurarEgresos":
       await messageSender(chatId, botReplies[12], bot);
       newTransactionCategory.type = "EGRESO";
-      userStates[chatId] = { state: STATES.WAITING_FOR_USER_WITHDRAW_CATEGORIES };
+      userStates[chatId] = {
+        state: STATES.WAITING_FOR_USER_WITHDRAW_CATEGORIES,
+      };
+      return;
+    case "hecho":
+      await messageSender(chatId, botReplies[13], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender(chatId, botReplies[14], bot);
+      userStates[chatId] = { state: STATES.WAITING_FOR_INITIAL_BALANCE };
       return;
     default:
       break;

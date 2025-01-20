@@ -71,7 +71,6 @@ export async function fetchCurrentUserId(telegram_id) {
 }
 
 export async function insertNewTransactionCategory(newTransactionCategory) {
-  console.log(newTransactionCategory)
   try {
     const { error } = await supabase.from("categories").insert({
       name: newTransactionCategory.name,
@@ -86,5 +85,28 @@ export async function insertNewTransactionCategory(newTransactionCategory) {
   } catch (error) {
     console.log("Error insertando nueva categoria", error);
     return { success: false, error: error };
+  }
+}
+
+export async function createNewRecord(newUserRecord) {
+  const { details, ammount, created_at, user_id, category, type } =
+    newUserRecord;
+  try {
+    const { error } = await supabase.from("records").insert({
+      detalles: details,
+      monto: 123456,
+      created_at: created_at,
+      user_id: user_id,
+      category_id: category || null,
+      record_type: type,
+    });
+    if (error){
+      throw error
+    } else {
+      return {success: true, error: ""}
+    }
+  } catch (error) {
+    console.log("Error intentando guardar movimiento a la base de datos ", error);
+    return {success: false, error: "Error intentando guardar movimiento a la base de datos "}
   }
 }

@@ -9,10 +9,25 @@ export async function validateEmail(email) {
   }
 }
 
-export async function validateText(text){
-    if(!text){
-        return {success: false, error: botReplies[9]};
-    } else {
-        return {success: true, error: ""};
-    }
+export async function validateText(text) {
+  if (!text) {
+    return { success: false, error: botReplies[9] };
+  } else {
+    return { success: true, error: "" };
+  }
+}
+
+export async function validateIsNumber(text) {
+  const regex = /^[0-9]+(\.[0-9]{2})?$/;
+  let userInput = "";
+  if (!text.includes(".")) {
+    userInput = `${text}.00`;
+  } else {
+    userInput = text;
+  }
+  if (!regex.test(userInput)) {
+    return { success: false, error: botReplies[15] , ammount: ""};
+  } else {
+    return { success: true, error: "" , ammount: userInput};
+  }
 }

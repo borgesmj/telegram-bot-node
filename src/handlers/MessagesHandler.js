@@ -1,5 +1,6 @@
 import signInUser from "../auth/signIn.js";
 import {
+  createNewRecord,
   createNewUser,
   fetchCurrentUser,
   fetchCurrentUserId,
@@ -8,7 +9,11 @@ import {
 import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
-import { validateEmail, validateText } from "../utils/validators.js";
+import {
+  validateEmail,
+  validateIsNumber,
+  validateText,
+} from "../utils/validators.js";
 
 export function changeName(userProfile, msg) {
   userProfile.first_name = msg.text;
@@ -27,7 +32,8 @@ export async function handleUserMessages(
   userStates,
   STATES,
   currentUser,
-  newTransactionCategory
+  newTransactionCategory,
+  newUserRecord
 ) {
   const validateUserInputText = await validateText(msg.text);
   if (!validateUserInputText.success) {
@@ -60,7 +66,7 @@ export async function handleUserMessages(
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender(msg.from.id, botReplies[11], bot);
       newTransactionCategory.type = "INGRESO";
-      newTransactionCategory.user_id = await currentUser.id;
+      newTransactionCategory.user_id = await fetchCurrentUserId(msg.from.id);
       userStates[msg.from.id] = {
         state: STATES.WAITING_FOR_USER_INCOME_CATEGORIES,
       };
@@ -81,6 +87,21 @@ export async function handleUserMessages(
       break;
     case "waiting_for_user_withdraw_categories":
       addNewCategory(newTransactionCategory, msg, bot);
+      break;
+    case "waiting_for_initial_balance":
+      const validateNumber = await validateIsNumber(msg.text);
+      if (!validateNumber.success) {
+        await messageSender(msg.from.id, validateNumber.error, bot);
+        return;
+      }
+      newUserRecord.details = "Balance Inicial";
+      newUserRecord.ammount = validateNumber.ammount;
+      newUserRecord.created_at = new Date();
+      newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
+      newUserRecord.category = "";
+      newUserRecord.type = "INGRESO";
+      await createNewRecord(newUserRecord);
+      //userStates[msg.from.id] = { state: STATES.COMPLETED };
       break;
     default:
       break;

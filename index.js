@@ -33,6 +33,7 @@ const STATES = {
   WAITING_FOR_USER_CURRENCY: "waiting_for_user_currency",
   WAITING_FOR_USER_INCOME_CATEGORIES: "waiting_for_user_income_categories",
   WAITING_FOR_USER_WITHDRAW_CATEGORIES: "waiting_for_user_withdraw_categories",
+  WAITING_FOR_INITIAL_BALANCE: "waiting_for_initial_balance",
   WAITING_FOR_NAME: "waiting_for_name",
   WAITING_FOR_AMOUNT: "waiting_for_amount",
   WAITING_FOR_TYPE: "waiting_for_type",
@@ -42,7 +43,15 @@ const STATES = {
 let newUserProfile = {};
 let currentUser = {};
 let newTransactionCategory = {};
+let newUserRecord = {}
+userStates[896160399] = { state: STATES.WAITING_FOR_INITIAL_BALANCE };
+
 bot.onText(/\/(\w+)/, async (msg, match) => {
+  try {
+    currentUser = await fetchCurrentUser(msg.from.id);
+  } catch (error) {
+    console.log("error haciendo fetch de current user desde index.js: ", error);
+  }
   const command = match[1];
   await commandHandler(
     command,
@@ -52,7 +61,8 @@ bot.onText(/\/(\w+)/, async (msg, match) => {
     userStates,
     STATES,
     currentUser,
-    newTransactionCategory
+    newTransactionCategory,
+    newUserRecord
   );
 });
 
@@ -73,7 +83,8 @@ bot.on("message", async (msg) => {
     userStates,
     STATES,
     currentUser,
-    newTransactionCategory
+    newTransactionCategory,
+    newUserRecord
   );
 });
 
