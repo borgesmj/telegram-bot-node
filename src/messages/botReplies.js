@@ -28,7 +28,11 @@ export const botReplies = [
   // ! 13
   "🤖\n\nPor último, vamos a configurar tus valores iniciales, eso me ayudará a llevar al dia tus cuentas",
   // ! 14
-  "🤖\n\nComencemos con tu balance inicial, vas a escribir el monto de saldo que tienes en este momento, sin comas\n\nsi deseas escribir decimales, hazlo con una coma. Ejemplo: `000000,32`",
+  "🤖\n\nComencemos con tu balance inicial, vas a escribir el monto de saldo que tienes en este momento, sin comas\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
   // ! 15
   "🤖\n\nDisculpa, el monto debe ser un texto solamente con números",
+  // ! 16
+  "🤖\n\nAhora configuremos el monto inicial de tus ahorros. Escribe el numero completo sin comas. \n\nSi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`\n\nEn caso de que no tengas, escribe 0",
+  // ! 17
+  "🤖\n\nTu perfil está completo, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal."
 ];

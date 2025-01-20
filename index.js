@@ -34,6 +34,7 @@ const STATES = {
   WAITING_FOR_USER_INCOME_CATEGORIES: "waiting_for_user_income_categories",
   WAITING_FOR_USER_WITHDRAW_CATEGORIES: "waiting_for_user_withdraw_categories",
   WAITING_FOR_INITIAL_BALANCE: "waiting_for_initial_balance",
+  WAITING_FOR_INITIAL_SAVINGS: "waiting_for_initial_savings",
   WAITING_FOR_NAME: "waiting_for_name",
   WAITING_FOR_AMOUNT: "waiting_for_amount",
   WAITING_FOR_TYPE: "waiting_for_type",

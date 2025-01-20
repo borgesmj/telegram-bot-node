@@ -94,19 +94,50 @@ export async function createNewRecord(newUserRecord) {
   try {
     const { error } = await supabase.from("records").insert({
       detalles: details,
-      monto: 123456,
+      monto: ammount,
       created_at: created_at,
       user_id: user_id,
       category_id: category || null,
       record_type: type,
     });
-    if (error){
-      throw error
+    if (error) {
+      throw error;
     } else {
-      return {success: true, error: ""}
+      return { success: true, error: "" };
     }
   } catch (error) {
-    console.log("Error intentando guardar movimiento a la base de datos ", error);
-    return {success: false, error: "Error intentando guardar movimiento a la base de datos "}
+    console.log(
+      "Error intentando guardar movimiento a la base de datos ",
+      error
+    );
+    return {
+      success: false,
+      error: "Error intentando guardar movimiento a la base de datos ",
+    };
+  }
+}
+
+export async function createNewSaving(newSaving) {
+  const { ammount, user_id } = newSaving;
+  try {
+    const { error } = await supabase.from("savings").insert({
+      created_at: new Date(),
+      ammount: ammount,
+      user_id: user_id,
+    });
+    if (error) {
+      throw error;
+    } else {
+      return { success: true, error: "" };
+    }
+  } catch (error) {
+    console.log(
+      "Error intentando guardar los ahorros a la base de datos ",
+      error
+    );
+    return {
+      success: false,
+      error: "Error intentando guardar los ahorros a la base de datos ",
+    };
   }
 }

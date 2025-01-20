@@ -1,6 +1,7 @@
 import signInUser from "../auth/signIn.js";
 import {
   createNewRecord,
+  createNewSaving,
   createNewUser,
   fetchCurrentUser,
   fetchCurrentUserId,
@@ -8,6 +9,7 @@ import {
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
+import sendSticker from "../senders/stickerSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
 import {
   validateEmail,
@@ -89,19 +91,46 @@ export async function handleUserMessages(
       addNewCategory(newTransactionCategory, msg, bot);
       break;
     case "waiting_for_initial_balance":
-      const validateNumber = await validateIsNumber(msg.text);
-      if (!validateNumber.success) {
-        await messageSender(msg.from.id, validateNumber.error, bot);
+      const validateInitialBalance = await validateIsNumber(msg.text);
+      if (!validateInitialBalance.success) {
+        await messageSender(msg.from.id, validateInitialBalance.error, bot);
         return;
       }
       newUserRecord.details = "Balance Inicial";
-      newUserRecord.ammount = validateNumber.ammount;
+      newUserRecord.ammount = validateInitialBalance.ammount;
       newUserRecord.created_at = new Date();
       newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
       newUserRecord.category = "";
       newUserRecord.type = "INGRESO";
-      await createNewRecord(newUserRecord);
-      //userStates[msg.from.id] = { state: STATES.COMPLETED };
+      const setInitialBalance = await createNewRecord(newUserRecord);
+      if (!setInitialBalance.success) {
+        await messageSender(msg.from.id, setInitialBalance.error, bot);
+        return;
+      }
+      userStates[msg.from.id] = { state: STATES.WAITING_FOR_INITIAL_SAVINGS };
+      await messageSender(msg.from.id, botReplies[16], bot);
+      break;
+    case "waiting_for_initial_savings":
+      const validateInitialSavings = await validateIsNumber(msg.text);
+      if (!validateInitialSavings.success) {
+        await messageSender(msg.from.id, validateInitialSavings.error, bot);
+        return;
+      }
+      const initialSavings = {};
+      initialSavings.ammount = validateInitialSavings.ammount;
+      initialSavings.user_id = await fetchCurrentUserId(msg.from.id);
+      const setInitialSavings = await createNewSaving(initialSavings);
+      if (!setInitialSavings.success) {
+        await messageSender(msg.from.id, setInitialSavings.error, bot);
+        return;
+      }
+      await sendSticker(
+        bot,
+        msg.from.id,
+        "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ"
+      );
+      await messageSender(msg.from.id, botReplies[17], bot);
+      userStates[msg.from.id] = { state: STATES.COMPLETED };
       break;
     default:
       break;
