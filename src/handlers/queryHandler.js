@@ -35,8 +35,8 @@ export async function handleUserQueries(
       ];
       optionsEdit(
         botReplies[18]
-          .replace("$userFirstName", await capitalizeWords(first_name) || "")
-          .replace("$userLastName", await capitalizeWords(last_name) || "")
+          .replace("$userFirstName", (await capitalizeWords(first_name)) || "")
+          .replace("$userLastName", (await capitalizeWords(last_name)) || "")
           .replace("$userEmail ", email || "")
           .replace("$username", `@${telegram_username}` || "")
           .replace("$userCurrency", currency || ""),
@@ -80,6 +80,12 @@ export async function handleUserQueries(
           {
             text: "Email",
             callback_data: "edit_email_btn",
+          },
+        ],
+        [
+          {
+            text: "Agregar categorias",
+            callback_data: "edit_categories_btn",
           },
         ],
         [

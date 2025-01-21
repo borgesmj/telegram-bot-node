@@ -147,6 +147,8 @@ export async function handleUserMessages(
       const editProfileData = await editProfile(editProfileObject, msg.from.id);
       if (!editProfileData.success) {
         await messageSender(msg.from.id, editProfileData.error, bot);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await sendMenu(msg.from.id, bot);
         return;
       }
       await messageSender(msg.from.id, botReplies[19], bot);
