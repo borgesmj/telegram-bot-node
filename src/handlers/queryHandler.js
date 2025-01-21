@@ -1,16 +1,18 @@
 import { fetchCurrentUser } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
-import messageSender from "../senders/messageSender.js";
-import messageWithOptions from "../senders/optiosSender.js";
+import messageWithOptions from "../senders/optionsSender.js";
 
 export async function handleUserQueries(query, bot) {
+  let inline_keyboard = []
+  let chatId = query.message.chat.id;
+  let messageId = query.message.message_id;
   switch (query.data) {
     case "my_profile":
       const currentUser = await fetchCurrentUser(query.message.chat.id);
       const { first_name, last_name, email, telegram_username, currency } =
         currentUser;
-      const inline_keyboard = [
+      inline_keyboard = [
         [
           {
             text: "Editar Perfil",
@@ -19,7 +21,7 @@ export async function handleUserQueries(query, bot) {
         ],
         [
           {
-            text: "🔙 Regresar al menú principal",
+            text: "⏪ Regresar al menú principal",
             callback_data: "back_to_menu_btn",
           },
         ],
@@ -31,13 +33,29 @@ export async function handleUserQueries(query, bot) {
           .replace("$userEmail ", email || "")
           .replace("$username", telegram_username)
           .replace("$userCurrency", currency),
-        query.message.chat.id,
+        chatId,
         bot,
-        inline_keyboard
+        inline_keyboard,
+        messageId
       );
       return;
     case "back_to_menu_btn":
-      await sendMenu(query.message.chat.id, bot);
+      inline_keyboard= [
+        [{ text: "Nuevo Ingreso", callback_data: "new_income" }],
+        [{ text: "Nuevo Retiro", callback_data: "new_withdraw" }],
+        [{ text: "Nuevo Ahorro", callback_data: "new_savings" }],
+        [{ text: "Ver movimientos", callback_data: "see_records" }],
+        [{ text: "Ver saldos", callback_data: "see_balances" }],
+        [{ text: "Mi Perfil", callback_data: "my_profile" }],
+        [{ text: "Info de este bot", callback_data: "about_bot" }],
+      ],
+      await messageWithOptions(
+        "*Menu Principal* 📋",
+        chatId,
+        bot,
+        inline_keyboard,
+        messageId
+      );
       return;
     default:
       break;
