@@ -24,8 +24,12 @@ export default async function addNewCategory(newTransactionCategory, msg, bot) {
   } else {
     if (newTransactionCategory.type === "INGRESO") {
       await messageSender(msg.from.id, botReplies[11], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender(msg.from.id, botReplies[20], bot);
     } else {
       await messageSender(msg.from.id, botReplies[12], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender(msg.from.id, botReplies[21], bot);
     }
   }
 }

@@ -22,9 +22,9 @@ export const botReplies = [
   // ! 10
   `🤖\n\nBienvenido de vuelta %username, haz click en /menu para ver el menu principal`,
   // ! 11
-  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Salario`, `Freelance`\n\nColoca de uno a la vez\n\nPara finalizar, haz click en /ConfigurarEgresos",
+  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Salario`, `Freelance`\n\nColoca de uno a la vez",
   // ! 12
-  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, esta vez serán los *EGRESOS*, por ejemplo `Arriendo`, `Comida`, `Servicios`\n\nColoca de uno a la vez\n\nPara finalizar, haz click en /hecho",
+  "🤖\n\nVas a ingresar las categorías de tus movimientos frecuentes, esta vez serán los *EGRESOS*, por ejemplo `Arriendo`, `Comida`, `Servicios`\n\nColoca de uno a la vez",
   // ! 13
   "🤖\n\nPor último, vamos a configurar tus valores iniciales, eso me ayudará a llevar al dia tus cuentas",
   // ! 14
@@ -45,5 +45,9 @@ export const botReplies = [
   💲 *Moneda predeterminada:* $userCurrency
   `,
   // ! 19
-  "Perfil actualizado con exito 🎉"
+  "Perfil actualizado con exito 🎉",
+  // ! 20
+  "\Para finalizar, haz click en /ConfigurarEgresos",
+  // ! 21
+  "Para finalizar, haz click en /hecho"
 ];
