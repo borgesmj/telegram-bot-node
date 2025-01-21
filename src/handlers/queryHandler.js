@@ -1,9 +1,16 @@
 import { fetchCurrentUser } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
-import {optionsEdit, optionsSend} from "../senders/optionsSender.js";
+import { optionsEdit, optionsSend } from "../senders/optionsSender.js";
+import capitalizeWords from "../utils/capitalizeWords.js";
 
-export async function handleUserQueries(query, bot, userStates, editProfileObject, STATES) {
+export async function handleUserQueries(
+  query,
+  bot,
+  userStates,
+  editProfileObject,
+  STATES
+) {
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
   let messageId = query.message.message_id;
@@ -28,11 +35,11 @@ export async function handleUserQueries(query, bot, userStates, editProfileObjec
       ];
       optionsEdit(
         botReplies[18]
-          .replace("$userFirstName", first_name || "")
-          .replace("$userLastName", last_name || "")
+          .replace("$userFirstName", await capitalizeWords(first_name) || "")
+          .replace("$userLastName", await capitalizeWords(last_name) || "")
           .replace("$userEmail ", email || "")
-          .replace("$username", telegram_username)
-          .replace("$userCurrency", currency),
+          .replace("$username", telegram_username || "")
+          .replace("$userCurrency", currency || ""),
         chatId,
         bot,
         inline_keyboard,
@@ -62,26 +69,26 @@ export async function handleUserQueries(query, bot, userStates, editProfileObjec
         [
           {
             text: "Nombre",
-            callback_data: "edit_name_btn"
+            callback_data: "edit_name_btn",
           },
           {
             text: "Apellido",
-            callback_data: "edit_lastname_btn"
-          }
+            callback_data: "edit_lastname_btn",
+          },
         ],
         [
           {
             text: "Email",
-            callback_data: "edit_email_btn"
-          }
+            callback_data: "edit_email_btn",
+          },
         ],
         [
           {
             text: "⏪ Regresar a mi perfil",
-            callback_data: "my_profile"
-          }
-        ]
-      ]
+            callback_data: "my_profile",
+          },
+        ],
+      ];
       await optionsEdit(
         "¿Que deseas editar?",
         chatId,
@@ -90,20 +97,66 @@ export async function handleUserQueries(query, bot, userStates, editProfileObjec
         messageId
       );
       return;
-      case "edit_name_btn":
-        userStates[query.message.chat.id] = { state: STATES.WAITING_FOR_EDIT_PROFILE }
-        editProfileObject.category = "first_name"
-        await optionsEdit(
-          "Ingresa tu nuevo nombre:",
-          chatId,
-          bot,
-          [[{
-            text: "Cancelar",
-            callback_data: "edit_profile"
-          }]],
-          messageId
-        )
-        return
+    case "edit_name_btn":
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_EDIT_PROFILE,
+      };
+      editProfileObject.category = "first_name";
+      await optionsEdit(
+        "Ingresa tu nuevo nombre:",
+        chatId,
+        bot,
+        [
+          [
+            {
+              text: "Cancelar",
+              callback_data: "edit_profile",
+            },
+          ],
+        ],
+        messageId
+      );
+      return;
+    case "edit_lastname_btn":
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_EDIT_PROFILE,
+      };
+      editProfileObject.category = "last_name";
+      await optionsEdit(
+        "Ingresa tu nuevo apellido:",
+        chatId,
+        bot,
+        [
+          [
+            {
+              text: "Cancelar",
+              callback_data: "edit_profile",
+            },
+          ],
+        ],
+        messageId
+      );
+      return;
+    case "edit_email_btn":
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_EDIT_PROFILE,
+      };
+      editProfileObject.category = "email";
+      await optionsEdit(
+        "Ingresa tu nuevo email:",
+        chatId,
+        bot,
+        [
+          [
+            {
+              text: "Cancelar",
+              callback_data: "edit_profile",
+            },
+          ],
+        ],
+        messageId
+      );
+      return;
     default:
       break;
   }

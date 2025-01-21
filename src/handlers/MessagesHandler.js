@@ -143,7 +143,7 @@ export async function handleUserMessages(
         await messageSender(msg.from.id, validateUserInputText.error, bot);
         return;
       }
-      editProfileObject.value = msg.text;
+      editProfileObject.value = msg.text.toLowerCase();
       const editProfileData = await editProfile(editProfileObject, msg.from.id);
       if (!editProfileData.success) {
         await messageSender(msg.from.id, editProfileData.error, bot);
