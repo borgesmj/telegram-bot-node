@@ -38,7 +38,7 @@ export async function handleUserQueries(
           .replace("$userFirstName", await capitalizeWords(first_name) || "")
           .replace("$userLastName", await capitalizeWords(last_name) || "")
           .replace("$userEmail ", email || "")
-          .replace("$username", telegram_username || "")
+          .replace("$username", `@${telegram_username}` || "")
           .replace("$userCurrency", currency || ""),
         chatId,
         bot,

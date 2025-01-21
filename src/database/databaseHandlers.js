@@ -17,15 +17,16 @@ export async function fetchUsers() {
   }
 }
 
+
 export async function createNewUser(chatId, userProfile) {
+  const {first_name, last_name, username, email, currency} = userProfile
   const { error } = await supabase.from("users").insert({
-    first_name: userProfile.first_name,
-    last_name: userProfile.last_name,
-    telegram_username: userProfile.username,
+    first_name: first_name ? first_name.toLowerCase() : null,
+    last_name: last_name ? last_name.toLowerCase() : null,
+    telegram_username: username,
     telegram_id: chatId,
-    created_at: new Date(),
-    email: userProfile.email,
-    currency: userProfile.currency,
+    email: email ? email.toLowerCase() : null,
+    currency: currency || null,
   });
   if (error) {
     console.log("Error creando un usuario nuevo a la base de datos", error);
