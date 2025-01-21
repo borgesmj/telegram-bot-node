@@ -77,6 +77,7 @@ export default async function commandHandler(
       userStates[chatId] = { state: STATES.WAITING_FOR_INITIAL_BALANCE };
       return;
     case "menu":
+      userStates[chatId] = { state: STATES.INITIAL }
       await sendMenu(msg.from.id, bot);
       break;
     default:

@@ -32,6 +32,7 @@ const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 
 const userStates = {};
 const STATES = {
+  INITIAL: "initial",
   WAITING_FOR_NEW_FIRST_NAME: "waiting_for_new_first_name",
   WAITING_FOR_EMAIL: "waiting_for_email",
   WAITING_FOR_USER_CURRENCY: "waiting_for_user_currency",
@@ -39,6 +40,7 @@ const STATES = {
   WAITING_FOR_USER_WITHDRAW_CATEGORIES: "waiting_for_user_withdraw_categories",
   WAITING_FOR_INITIAL_BALANCE: "waiting_for_initial_balance",
   WAITING_FOR_INITIAL_SAVINGS: "waiting_for_initial_savings",
+  WAITING_FOR_EDIT_PROFILE: "waiting_for_edit_profile",
   WAITING_FOR_NAME: "waiting_for_name",
   WAITING_FOR_AMOUNT: "waiting_for_amount",
   WAITING_FOR_TYPE: "waiting_for_type",
@@ -49,6 +51,7 @@ let newUserProfile = {};
 let currentUser = {};
 let newTransactionCategory = {};
 let newUserRecord = {};
+let editProfileObject = {}
 
 bot.onText(/\/(\w+)/, async (msg, match) => {
   try {
@@ -88,11 +91,12 @@ bot.on("message", async (msg) => {
     STATES,
     currentUser,
     newTransactionCategory,
-    newUserRecord
+    newUserRecord,
+    editProfileObject
   );
 });
 
 bot.on("callback_query", async (query) => {
-  handleUserQueries(query, bot);
+  handleUserQueries(query, bot, userStates, editProfileObject, STATES);
 });
 bot.on("polling_error", (msg) => console.log(msg));

@@ -43,5 +43,7 @@ export const botReplies = [
   📧 *E-mail:* $userEmail  
   📱 *Telegram:* $username 
   💲 *Moneda predeterminada:* $userCurrency
-  `
+  `,
+  // ! 19
+  "Perfil actualizado con exito 🎉"
 ];

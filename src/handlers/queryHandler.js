@@ -1,10 +1,10 @@
 import { fetchCurrentUser } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
-import messageWithOptions from "../senders/optionsSender.js";
+import {optionsEdit, optionsSend} from "../senders/optionsSender.js";
 
-export async function handleUserQueries(query, bot) {
-  let inline_keyboard = []
+export async function handleUserQueries(query, bot, userStates, editProfileObject, STATES) {
+  let inline_keyboard = [];
   let chatId = query.message.chat.id;
   let messageId = query.message.message_id;
   switch (query.data) {
@@ -26,7 +26,7 @@ export async function handleUserQueries(query, bot) {
           },
         ],
       ];
-      messageWithOptions(
+      optionsEdit(
         botReplies[18]
           .replace("$userFirstName", first_name || "")
           .replace("$userLastName", last_name || "")
@@ -40,7 +40,7 @@ export async function handleUserQueries(query, bot) {
       );
       return;
     case "back_to_menu_btn":
-      inline_keyboard= [
+      (inline_keyboard = [
         [{ text: "Nuevo Ingreso", callback_data: "new_income" }],
         [{ text: "Nuevo Retiro", callback_data: "new_withdraw" }],
         [{ text: "Nuevo Ahorro", callback_data: "new_savings" }],
@@ -48,15 +48,62 @@ export async function handleUserQueries(query, bot) {
         [{ text: "Ver saldos", callback_data: "see_balances" }],
         [{ text: "Mi Perfil", callback_data: "my_profile" }],
         [{ text: "Info de este bot", callback_data: "about_bot" }],
-      ],
-      await messageWithOptions(
-        "*Menu Principal* 📋",
+      ]),
+        await optionsEdit(
+          "*Menu Principal* 📋",
+          chatId,
+          bot,
+          inline_keyboard,
+          messageId
+        );
+      return;
+    case "edit_profile":
+      inline_keyboard = [
+        [
+          {
+            text: "Nombre",
+            callback_data: "edit_name_btn"
+          },
+          {
+            text: "Apellido",
+            callback_data: "edit_lastname_btn"
+          }
+        ],
+        [
+          {
+            text: "Email",
+            callback_data: "edit_email_btn"
+          }
+        ],
+        [
+          {
+            text: "⏪ Regresar a mi perfil",
+            callback_data: "my_profile"
+          }
+        ]
+      ]
+      await optionsEdit(
+        "¿Que deseas editar?",
         chatId,
         bot,
         inline_keyboard,
         messageId
       );
       return;
+      case "edit_name_btn":
+        userStates[query.message.chat.id] = { state: STATES.WAITING_FOR_EDIT_PROFILE }
+        editProfileObject.category = "first_name"
+        await optionsEdit(
+          "Ingresa tu nuevo nombre:",
+          chatId,
+          bot,
+          [[{
+            text: "Cancelar",
+            callback_data: "edit_profile"
+          }]],
+          messageId
+        )
+        return
     default:
       break;
   }

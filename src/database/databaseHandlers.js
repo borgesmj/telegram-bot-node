@@ -141,3 +141,23 @@ export async function createNewSaving(newSaving) {
     };
   }
 }
+
+export async function editProfile(editProfileObject, chatId) {
+  const { category, value } = editProfileObject;
+  try {
+    // ! pendiente hacer update de user
+    const updateData = { [category]: value };
+    const userId = await fetchCurrentUserId(chatId);
+    const { error } = await supabase
+      .from("users")
+      .update(updateData)
+      .eq("id", userId);
+      if (error){
+        throw error
+      }
+      return {success: true, error: ""}
+  } catch (error) {
+    console.log(error);
+    return {success: false, error: "Error intentando editar el perfil"}
+  }
+}

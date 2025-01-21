@@ -3,6 +3,7 @@ import {
   createNewRecord,
   createNewSaving,
   createNewUser,
+  editProfile,
   fetchCurrentUser,
   fetchCurrentUserId,
   insertNewTransactionCategory,
@@ -36,7 +37,8 @@ export async function handleUserMessages(
   STATES,
   currentUser,
   newTransactionCategory,
-  newUserRecord
+  newUserRecord,
+  editProfileObject
 ) {
   const validateUserInputText = await validateText(msg.text);
   if (!validateUserInputText.success) {
@@ -133,7 +135,24 @@ export async function handleUserMessages(
       await messageSender(msg.from.id, botReplies[17], bot);
       userStates[msg.from.id] = { state: STATES.COMPLETED };
       await new Promise((resolve) => setTimeout(resolve, 300));
-      await sendMenu(msg.from.id, bot)
+      await sendMenu(msg.from.id, bot);
+      break;
+    case "waiting_for_edit_profile":
+      const validateUserInputText = await validateText(msg.text);
+      if (!validateUserInputText.success) {
+        await messageSender(msg.from.id, validateUserInputText.error, bot);
+        return;
+      }
+      editProfileObject.value = msg.text;
+      const editProfileData = await editProfile(editProfileObject, msg.from.id);
+      if (!editProfileData.success) {
+        await messageSender(msg.from.id, editProfileData.error, bot);
+        return;
+      }
+      await messageSender(msg.from.id, botReplies[19], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await sendMenu(msg.from.id, bot);
+      userStates[msg.from.id] = { state: STATES.COMPLETED };
       break;
     default:
       break;
