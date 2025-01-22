@@ -2,6 +2,7 @@ import {
   createNewRecord,
   createNewSaving,
   fetchCurrentUser,
+  fetchTransactionsAndBalance,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
@@ -61,13 +62,13 @@ export async function handleUserQueries(
       return;
     case "back_to_menu_btn":
       (inline_keyboard = [
-        [{ text: "Nuevo Ingreso", callback_data: "new_income" }],
-        [{ text: "Nuevo Retiro", callback_data: "new_withdraw" }],
-        [{ text: "Nuevo Ahorro", callback_data: "new_savings" }],
-        [{ text: "Ver movimientos", callback_data: "see_records" }],
-        [{ text: "Ver saldos", callback_data: "see_balances" }],
-        [{ text: "Mi Perfil", callback_data: "my_profile" }],
-        [{ text: "Info de este bot", callback_data: "about_bot" }],
+        [{ text: "💰 Nuevo Ingreso", callback_data: "new_income" }],
+        [{ text: "💸 Nuevo Retiro", callback_data: "new_withdraw" }],
+        [{ text: "💵 Nuevo Ahorro", callback_data: "new_savings" }],
+        [{ text: "📋 Ver movimientos", callback_data: "see_records" }],
+        [{ text: "📊 Ver saldos", callback_data: "see_balances" }],
+        [{ text: "👤 Mi Perfil", callback_data: "my_profile" }],
+        [{ text: "ℹ️ Info de este bot", callback_data: "about_bot" }],
       ]),
         await optionsEdit(
           "*Menu Principal* 📋",
@@ -248,7 +249,11 @@ export async function handleUserQueries(
       const saveNewSavingTable = await createNewSaving(newUserRecord);
       const saveNewSavingsRecord = await createNewRecord(newUserRecord);
       if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
-        await messageSender(query.message.chat.id, saveNewSavingTable.error, bot);
+        await messageSender(
+          query.message.chat.id,
+          saveNewSavingTable.error,
+          bot
+        );
         return;
       }
       await sendSticker(
@@ -261,25 +266,68 @@ export async function handleUserQueries(
       await sendMenu(query.message.chat.id, bot);
       userStates[query.message.chat.id] = { state: STATES.COMPLETED };
       return;
+    case "see_balances":
+      inline_keyboard = [
+        [
+          {
+            text: "📅 Mes Actual",
+            callback_data: "see_balance_current_month_btn",
+          },
+        ],
+        [{ text: "📅 Otro mes", callback_data: "see_another_month_btn" }],
+        [
+          {
+            text: "📊 Historial completo",
+            callback_data: "see_balance_history_btn",
+          },
+        ],
+        [{ text: "❌ Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      optionsEdit(
+        "Elige una opcion",
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      /**
+       * 
+      const incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      const expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      const savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      console.log("Total Ingresos: ", incomeBalance);
+      console.log("Total egresos: ", expenseBalance);
+      console.log("Total Ahorros: ", savingsBalance);
+      */
+      return;
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
+        const { type, details, ammount, category } = newUserRecord;
+        confirmationMessage = botReplies[26]
+          .replace("$type", type)
+          .replace("$details", details)
+          .replace(
+            "$ammount",
+            `${await numberFormater(ammount, currentUser.currency)}`
+          )
+          .replace("$category", category);
+        await sendConfirmation(
+          confirmationMessage,
+          "confirm_transaction",
+          bot,
+          query.message.chat.id
+        );
       }
-      const { type, details, ammount, category } = newUserRecord;
-      confirmationMessage = botReplies[26]
-        .replace("$type", newUserRecord.type)
-        .replace("$details", newUserRecord.details)
-        .replace(
-          "$ammount",
-          `${await numberFormater(newUserRecord.ammount, currentUser.currency)}`
-        )
-        .replace("$category", newUserRecord.category);
-      await sendConfirmation(
-        confirmationMessage,
-        "confirm_transaction",
-        bot,
-        query.message.chat.id
-      );
       break;
   }
   console.log("query data: ", query.data);

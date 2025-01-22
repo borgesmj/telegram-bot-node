@@ -95,10 +95,10 @@ async function fetchCategoryId(categoryName, userId) {
       .select("id")
       .eq("user_id", userId)
       .eq("name", categoryName);
-      if (error){
-        throw error
-      }
-      return data[0].id
+    if (error) {
+      throw error;
+    }
+    return data[0].id;
   } catch (error) {
     console.log(error);
   }
@@ -199,3 +199,22 @@ export async function fetchUserCategories(chatId, type) {
     console.log(error);
   }
 }
+
+export async function fetchTransactionsAndBalance(userId, type) {
+  let userIncome = 0;
+  try {
+    const { data, error } = await supabase
+      .from("records")
+      .select("monto")
+      .eq("record_type", type)
+      .eq("user_id", userId);
+    if (error) {
+      throw error;
+    }
+    userIncome = data.reduce((acc, cur) => acc + cur.monto, 0);
+    return userIncome;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
