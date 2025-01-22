@@ -181,7 +181,7 @@ export async function handleUserMessages(
         return;
       }
       newUserRecord.ammount = validateTransactionAmount.ammount;
-      newUserRecord.created_at= new Date();
+      newUserRecord.created_at = new Date();
       let userCategories = [];
       userCategories = await fetchUserCategories(
         msg.from.id,
@@ -206,6 +206,31 @@ export async function handleUserMessages(
         },
       ]);
       await optionsSend(botReplies[25], msg.from.id, bot, inline_keyboard);
+      return;
+    case "waiting_for_new_savings":
+      const validateNewSavings = await validateIsNumber(msg.text);
+      if (!validateNewSavings.success) {
+        await messageSender(msg.from.id, validateNewSavings.error, bot);
+        return;
+      }
+      newUserRecord.ammount = validateNewSavings.ammount;
+      newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
+      newUserRecord.created_at = new Date();
+      const saveNewSavingTable = await createNewSaving(newUserRecord);
+      const saveNewSavingsRecord = await createNewRecord(newUserRecord);
+      if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
+        await messageSender(msg.from.id, saveNewSavingTable.error, bot);
+        return;
+      }
+      await sendSticker(
+        bot,
+        msg.from.id,
+        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
+      );
+      await messageSender(msg.from.id, botReplies[28], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await sendMenu(msg.from.id, bot);
+      userStates[msg.from.id] = { state: STATES.COMPLETED };
       return;
     default:
       break;

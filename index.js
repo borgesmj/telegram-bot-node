@@ -43,6 +43,7 @@ const STATES = {
   WAITING_FOR_EDIT_PROFILE: "waiting_for_edit_profile",
   WAITING_FOR_TRANSACTION_NAME: "waiting_for_transaction_name",
   WAITING_FOR_TRANSACTION_AMOUNT: "waiting_for_transaction_amount",
+  WAITING_FOR_NEW_SAVINGS: "waiting_for_new_savings",
   WAITING_FOR_TYPE: "waiting_for_type",
   COMPLETED: "completed",
 };

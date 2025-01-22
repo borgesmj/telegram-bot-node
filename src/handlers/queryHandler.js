@@ -207,6 +207,7 @@ export async function handleUserQueries(
         );
         return;
       }
+      newUserRecord = {};
       await sendSticker(
         bot,
         query.message.chat.id,
@@ -218,6 +219,24 @@ export async function handleUserQueries(
       await sendMenu(query.message.chat.id, bot);
       userStates[query.message.chat.id] = { state: STATES.COMPLETED };
       break;
+    case "new_savings":
+      newUserRecord.type = "AHORROS";
+      newUserRecord.details = "Nuevos ahorros";
+      newUserRecord.user_id = currentUser.id;
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_NEW_SAVINGS,
+      };
+      await optionsEdit(
+        botReplies[27],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];

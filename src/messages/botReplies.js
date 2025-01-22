@@ -59,5 +59,9 @@ export const botReplies = [
   // ! 25
   "🤖\n\nElige la categoria de esta transacción. Si deseas cancelar, haz click en el botón de abajo",
   // ! 26
-  "🤖\n\nConfirma la transaccion:\n\n*Detalles:* `$details`\n*Monto:* `$ammount`\n*Categoria:* `$category`\n*Tipo:* `$type`"
+  "🤖\n\nConfirma la transaccion:\n\n*Detalles:* `$details`\n*Monto:* `$ammount`\n*Categoria:* `$category`\n*Tipo:* `$type`",
+  // ! 27
+  "🤖\n\n*MUY IMPORTANTE TENER AHORROS!!!*\n\nIngresa el monto que quieras ahorrar:\n\nSi quieres cancelar, hazlo por el boton de abajo.",
+  // ! 28
+  "🤖\n\nTus ahorros fueron guardados con éxito 💰"
 ];
