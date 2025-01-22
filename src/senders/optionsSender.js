@@ -13,7 +13,7 @@ export function optionsEdit(text, chatId, bot, keyboard, messageId) {
   }
 }
 
-export function optionsSend(text, chatId, bot, keyboard){
+export function optionsSend(text, chatId, bot, keyboard) {
   try {
     bot.sendMessage(chatId, text, {
       reply_markup: {
@@ -23,5 +23,27 @@ export function optionsSend(text, chatId, bot, keyboard){
     });
   } catch (error) {
     console.log("Error al enviar el mensaje con opciones: ", error);
+  }
+}
+
+export async function sendConfirmation(text, action, bot, chatId) {
+  const inline_keyboard = [
+    [
+      {
+        text: "Confirmar",
+        callback_data: action,
+      },
+    ],
+    [
+      {
+        text: "Cancelar",
+        callback_data: "back_to_menu_btn",
+      },
+    ],
+  ];
+  try {
+    await optionsSend(text, chatId, bot, inline_keyboard)
+  } catch (error) {
+    console.log("Error al enviar el mensaje de confirmación ", error)
   }
 }

@@ -63,5 +63,7 @@ export const botReplies = [
   // ! 27
   "🤖\n\n*MUY IMPORTANTE TENER AHORROS!!!*\n\nIngresa el monto que quieras ahorrar:\n\nSi quieres cancelar, hazlo por el boton de abajo.",
   // ! 28
-  "🤖\n\nTus ahorros fueron guardados con éxito 💰"
+  "🤖\n\nTus ahorros fueron guardados con éxito 💰",
+  // !29
+  "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`"
 ];

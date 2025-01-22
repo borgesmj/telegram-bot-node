@@ -12,9 +12,10 @@ import {
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
-import { optionsSend } from "../senders/optionsSender.js";
+import { optionsSend, sendConfirmation } from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
+import numberFormater from "../utils/numberFormater.js";
 import {
   validateEmail,
   validateIsNumber,
@@ -43,6 +44,7 @@ export async function handleUserMessages(
   editProfileObject
 ) {
   const validateUserInputText = await validateText(msg.text);
+  let confirmationMessage = "";
   if (!validateUserInputText.success) {
     await messageSender(msg.from.id, validateUserInputText.error, bot);
     return;
@@ -216,21 +218,16 @@ export async function handleUserMessages(
       newUserRecord.ammount = validateNewSavings.ammount;
       newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
       newUserRecord.created_at = new Date();
-      const saveNewSavingTable = await createNewSaving(newUserRecord);
-      const saveNewSavingsRecord = await createNewRecord(newUserRecord);
-      if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
-        await messageSender(msg.from.id, saveNewSavingTable.error, bot);
-        return;
-      }
-      await sendSticker(
-        bot,
-        msg.from.id,
-        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
+      confirmationMessage = botReplies[29].replace(
+        "$ammount",
+        await numberFormater(newUserRecord.ammount, currentUser.currency)
       );
-      await messageSender(msg.from.id, botReplies[28], bot);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await sendMenu(msg.from.id, bot);
-      userStates[msg.from.id] = { state: STATES.COMPLETED };
+      await sendConfirmation(
+        confirmationMessage,
+        "confirm_new_savings_btn",
+        bot,
+        msg.from.id
+      );
       return;
     default:
       break;

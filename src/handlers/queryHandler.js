@@ -1,11 +1,16 @@
 import {
   createNewRecord,
+  createNewSaving,
   fetchCurrentUser,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
-import { optionsEdit, optionsSend } from "../senders/optionsSender.js";
+import {
+  optionsEdit,
+  optionsSend,
+  sendConfirmation,
+} from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import capitalizeWords from "../utils/capitalizeWords.js";
 import numberFormater from "../utils/numberFormater.js";
@@ -21,6 +26,7 @@ export async function handleUserQueries(
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
   let messageId = query.message.message_id;
+  let confirmationMessage = "";
   const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -238,35 +244,41 @@ export async function handleUserQueries(
         messageId
       );
       return;
+    case "confirm_new_savings_btn":
+      const saveNewSavingTable = await createNewSaving(newUserRecord);
+      const saveNewSavingsRecord = await createNewRecord(newUserRecord);
+      if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
+        await messageSender(query.message.chat.id, saveNewSavingTable.error, bot);
+        return;
+      }
+      await sendSticker(
+        bot,
+        query.message.chat.id,
+        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
+      );
+      await messageSender(query.message.chat.id, botReplies[28], bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await sendMenu(query.message.chat.id, bot);
+      userStates[query.message.chat.id] = { state: STATES.COMPLETED };
+      return;
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
       }
-      inline_keyboard = [
-        [
-          {
-            text: "Confirmar",
-            callback_data: "confirm_transaction",
-          },
-        ],
-        [
-          {
-            text: "Cancelar",
-            callback_data: "back_to_menu_btn",
-          },
-        ],
-      ];
       const { type, details, ammount, category } = newUserRecord;
-      optionsEdit(
-        botReplies[26]
-          .replace("$type", type)
-          .replace("$details", details)
-          .replace("$ammount", `${await numberFormater(ammount, currentUser.currency)}`)
-          .replace("$category", category),
-        query.message.chat.id,
+      confirmationMessage = botReplies[26]
+        .replace("$type", newUserRecord.type)
+        .replace("$details", newUserRecord.details)
+        .replace(
+          "$ammount",
+          `${await numberFormater(newUserRecord.ammount, currentUser.currency)}`
+        )
+        .replace("$category", newUserRecord.category);
+      await sendConfirmation(
+        confirmationMessage,
+        "confirm_transaction",
         bot,
-        inline_keyboard,
-        query.message.message_id
+        query.message.chat.id
       );
       break;
   }
