@@ -9,7 +9,8 @@ export async function handleUserQueries(
   bot,
   userStates,
   editProfileObject,
-  STATES
+  STATES,
+  newUserRecord
 ) {
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
@@ -162,6 +163,20 @@ export async function handleUserQueries(
         ],
         messageId
       );
+      return;
+    case "new_income":
+      newUserRecord.type = "INGRESO";
+      await optionsEdit(
+        botReplies[22],
+        query.message.chat.id,
+        bot,
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_TRANSACTION_NAME,
+      };
       return;
     default:
       break;

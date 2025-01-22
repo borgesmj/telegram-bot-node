@@ -41,8 +41,8 @@ const STATES = {
   WAITING_FOR_INITIAL_BALANCE: "waiting_for_initial_balance",
   WAITING_FOR_INITIAL_SAVINGS: "waiting_for_initial_savings",
   WAITING_FOR_EDIT_PROFILE: "waiting_for_edit_profile",
-  WAITING_FOR_NAME: "waiting_for_name",
-  WAITING_FOR_AMOUNT: "waiting_for_amount",
+  WAITING_FOR_TRANSACTION_NAME: "waiting_for_transaction_name",
+  WAITING_FOR_TRANSACTION_AMOUNT: "waiting_for_transaction_amount",
   WAITING_FOR_TYPE: "waiting_for_type",
   COMPLETED: "completed",
 };
@@ -97,6 +97,6 @@ bot.on("message", async (msg) => {
 });
 
 bot.on("callback_query", async (query) => {
-  handleUserQueries(query, bot, userStates, editProfileObject, STATES);
+  handleUserQueries(query, bot, userStates, editProfileObject, STATES, newUserRecord);
 });
 bot.on("polling_error", (msg) => console.log(msg));

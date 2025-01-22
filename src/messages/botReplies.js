@@ -49,5 +49,9 @@ export const botReplies = [
   // ! 20
   "\Para finalizar, haz click en /ConfigurarEgresos",
   // ! 21
-  "Para finalizar, haz click en /hecho"
+  "Para finalizar, haz click en /hecho",
+  // ! 22
+  "🤖\n\n*NUEVO INGRESO*\n\nEnviame el nombre de la transaccion.\n\nPara cancelar, haz click en el botón de abajo",
+  // ! 23
+  "🤖\n\nAhora vas a enviarme el monto de la transacción. Solo deben ser números, si deseas colocar decimales, escribe un punto. Por ejemplo: `XXXXXX.50`\n\nPara cancelar, haz click en el botón de abajo"
 ];

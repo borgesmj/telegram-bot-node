@@ -1,5 +1,3 @@
-import { parse } from "dotenv";
-
 export function optionsEdit(text, chatId, bot, keyboard, messageId) {
   try {
     bot.editMessageText(text, {

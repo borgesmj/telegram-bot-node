@@ -11,6 +11,7 @@ import {
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
+import { optionsSend } from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import addNewCategory from "../utils/addNewCategory.js";
 import {
@@ -156,6 +157,29 @@ export async function handleUserMessages(
       await sendMenu(msg.from.id, bot);
       userStates[msg.from.id] = { state: STATES.COMPLETED };
       break;
+    case "waiting_for_transaction_name":
+      const validateTransactionName = await validateText(msg.text);
+      if (!validateTransactionName.success) {
+        await messageSender(msg.from.id, validateTransactionName.error, bot);
+        return;
+      }
+      newUserRecord.details = msg.text;
+      await optionsSend(botReplies[23], msg.from.id, bot, [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ]);
+      userStates[msg.from.id] = {
+        state: STATES.WAITING_FOR_TRANSACTION_AMOUNT,
+      };
+      break;
+    case "waiting_for_transaction_amount":
+      const validateTransactionAmount = await validateIsNumber(msg.text);
+      if (!validateTransactionAmount.success) {
+        await messageSender(msg.from.id, validateTransactionAmount.error, bot);
+        return;
+      }
+      newUserRecord.ammount = validateTransactionAmount.ammount;
+      newUserRecord.date = new Date();
+      console.log(newUserRecord);
     default:
       break;
   }
