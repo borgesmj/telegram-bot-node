@@ -51,7 +51,7 @@ let newUserProfile = {};
 let currentUser = {};
 let newTransactionCategory = {};
 let newUserRecord = {};
-let editProfileObject = {}
+let editProfileObject = {};
 
 bot.onText(/\/(\w+)/, async (msg, match) => {
   try {
@@ -97,6 +97,14 @@ bot.on("message", async (msg) => {
 });
 
 bot.on("callback_query", async (query) => {
-  handleUserQueries(query, bot, userStates, editProfileObject, STATES, newUserRecord);
+  handleUserQueries(
+    query,
+    bot,
+    userStates,
+    editProfileObject,
+    STATES,
+    newUserRecord,
+    currentUser
+  );
 });
 bot.on("polling_error", (msg) => console.log(msg));

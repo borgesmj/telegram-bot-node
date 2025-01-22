@@ -1,7 +1,12 @@
-import { fetchCurrentUser } from "../database/databaseHandlers.js";
+import {
+  createNewRecord,
+  fetchCurrentUser,
+} from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
+import messageSender from "../senders/messageSender.js";
 import { optionsEdit, optionsSend } from "../senders/optionsSender.js";
+import sendSticker from "../senders/stickerSender.js";
 import capitalizeWords from "../utils/capitalizeWords.js";
 
 export async function handleUserQueries(
@@ -15,9 +20,9 @@ export async function handleUserQueries(
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
   let messageId = query.message.message_id;
+  const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
-      const currentUser = await fetchCurrentUser(query.message.chat.id);
       const { first_name, last_name, email, telegram_username, currency } =
         currentUser;
       inline_keyboard = [
@@ -178,7 +183,7 @@ export async function handleUserQueries(
         state: STATES.WAITING_FOR_TRANSACTION_NAME,
       };
       return;
-      case "new_withdraw":
+    case "new_withdraw":
       newUserRecord.type = "EGRESO";
       await optionsEdit(
         botReplies[24],
@@ -192,7 +197,57 @@ export async function handleUserQueries(
         state: STATES.WAITING_FOR_TRANSACTION_NAME,
       };
       return;
+    case "confirm_transaction":
+      const sendNewTransaction = await createNewRecord(newUserRecord);
+      if (!sendNewTransaction.success) {
+        await messageSender(
+          query.message.chat.id,
+          sendNewTransaction.error,
+          bot
+        );
+        return;
+      }
+      await sendSticker(
+        bot,
+        query.message.chat.id,
+        "CAACAgIAAxkBAAIKrGeRBX-8sa-q0WyXSKJDdRKDRiIGAAL-AANWnb0K2gRhMC751_82BA"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender(query.message.chat.id, "Transaccion guardadda", bot);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await sendMenu(query.message.chat.id, bot);
+      userStates[query.message.chat.id] = { state: STATES.COMPLETED };
+      break;
     default:
+      if (query.data.startsWith("category-selection-option")) {
+        newUserRecord.category = query.data.split(":")[1];
+      }
+      inline_keyboard = [
+        [
+          {
+            text: "Confirmar",
+            callback_data: "confirm_transaction",
+          },
+        ],
+        [
+          {
+            text: "Cancelar",
+            callback_data: "back_to_menu_btn",
+          },
+        ],
+      ];
+      const { type, details, ammount, category } = newUserRecord;
+      optionsEdit(
+        botReplies[26]
+          .replace("$type", type)
+          .replace("$details", details)
+          .replace("$ammount", `${ammount} ${currentUser.currency}`)
+          .replace("$category", category),
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        query.message.message_id
+      );
       break;
   }
   console.log("query data: ", query.data);

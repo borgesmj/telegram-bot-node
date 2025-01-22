@@ -59,4 +59,5 @@ export const botReplies = [
   // ! 25
   "🤖\n\nElige la categoria de esta transacción. Si deseas cancelar, haz click en el botón de abajo",
   // ! 26
+  "🤖\n\nConfirma la transaccion:\n\n*Detalles:* `$details`\n*Monto:* `$ammount`\n*Categoria:* `$category`\n*Tipo:* `$type`"
 ];

@@ -88,16 +88,36 @@ export async function insertNewTransactionCategory(newTransactionCategory) {
   }
 }
 
+async function fetchCategoryId(categoryName, userId) {
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("name", categoryName);
+      if (error){
+        throw error
+      }
+      return data[0].id
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export async function createNewRecord(newUserRecord) {
   const { details, ammount, created_at, user_id, category, type } =
     newUserRecord;
+  let categoryId = 0;
+  if (category) {
+    categoryId = await fetchCategoryId(category, user_id);
+  }
   try {
     const { error } = await supabase.from("records").insert({
       detalles: details,
       monto: ammount,
       created_at: created_at,
       user_id: user_id,
-      category_id: category || null,
+      category_id: categoryId || null,
       record_type: type,
     });
     if (error) {

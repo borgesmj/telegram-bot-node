@@ -28,6 +28,6 @@ export async function validateIsNumber(text) {
   if (!regex.test(userInput)) {
     return { success: false, error: botReplies[15] , ammount: ""};
   } else {
-    return { success: true, error: "" , ammount: userInput};
+    return { success: true, error: "" , ammount: Number(userInput)};
   }
 }

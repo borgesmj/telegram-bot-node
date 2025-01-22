@@ -165,6 +165,8 @@ export async function handleUserMessages(
         return;
       }
       newUserRecord.details = msg.text;
+      const currentUserId = await fetchCurrentUserId(msg.from.id);
+      newUserRecord.user_id = currentUserId;
       await optionsSend(botReplies[23], msg.from.id, bot, [
         [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
       ]);
@@ -179,7 +181,7 @@ export async function handleUserMessages(
         return;
       }
       newUserRecord.ammount = validateTransactionAmount.ammount;
-      newUserRecord.date = new Date();
+      newUserRecord.created_at= new Date();
       let userCategories = [];
       userCategories = await fetchUserCategories(
         msg.from.id,
@@ -190,7 +192,7 @@ export async function handleUserMessages(
       userCategories.forEach((category, index) => {
         tempRow.push({
           text: category.name,
-          callback_data: "category_selection",
+          callback_data: `category-selection-option:${category.name}`,
         });
         if (tempRow.length === 2 || index === userCategories.length - 1) {
           inline_keyboard.push(tempRow);
