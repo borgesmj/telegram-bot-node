@@ -15,6 +15,7 @@ import {
 } from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import capitalizeWords from "../utils/capitalizeWords.js";
+import getMonthString from "../utils/getMonth.js";
 import numberFormater from "../utils/numberFormater.js";
 
 export async function handleUserQueries(
@@ -353,7 +354,10 @@ export async function handleUserQueries(
         getMonth,
         "AHORROS"
       );
-      const generalBalanceCurrentMonth = incomeBalanceCurrentMonth - expensesBalanceCurrentMonth - savingsBalanceCurrentMonth;
+      const generalBalanceCurrentMonth =
+        incomeBalanceCurrentMonth -
+        expensesBalanceCurrentMonth -
+        savingsBalanceCurrentMonth;
       textMesssage = botReplies[31]
         .replace(
           "$income",
@@ -361,7 +365,10 @@ export async function handleUserQueries(
         )
         .replace(
           "$expenses",
-          await numberFormater(expensesBalanceCurrentMonth, currentUser.currency)
+          await numberFormater(
+            expensesBalanceCurrentMonth,
+            currentUser.currency
+          )
         )
         .replace(
           "$savings",
@@ -376,6 +383,75 @@ export async function handleUserQueries(
       ];
       await optionsEdit(
         textMesssage,
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_another_month_btn":
+      inline_keyboard = [
+        [
+          {
+            text: "Enero",
+            callback_data: "balance-month-1",
+          },
+          {
+            text: "Febrero",
+            callback_data: "balance-month-2",
+          },
+        ],
+        [
+          {
+            text: "Marzo",
+            callback_data: "balance-month-3",
+          },
+          {
+            text: "Abril",
+            callback_data: "balance-month-4",
+          },
+        ],
+        [
+          {
+            text: "Mayo",
+            callback_data: "balance-month-5",
+          },
+          {
+            text: "Junio",
+            callback_data: "balance-month-6",
+          },
+        ],
+        [
+          {
+            text: "Julio",
+            callback_data: "balance-month-7",
+          },
+          {
+            text: "Agosto",
+            callback_data: "balance-month-8",
+          },
+        ],
+        [
+          {
+            text: "Septiembre",
+            callback_data: "balance-month-9",
+          },
+          {
+            text: "Octubre",
+            callback_data: "balance-month-10",
+          },
+        ],
+        [
+          {
+            text: "Noviembre",
+            callback_data: "balance-month-11",
+          },
+          { text: "Diciembre", callback_data: "balance-month-12" },
+        ],
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        "Elige el mes",
         query.message.chat.id,
         bot,
         inline_keyboard,
@@ -399,6 +475,63 @@ export async function handleUserQueries(
           "confirm_transaction",
           bot,
           query.message.chat.id
+        );
+      } else if (query.data.startsWith("balance-month")) {
+        const month = query.data.split("-")[2];
+        const incomeBalanceByMonth = await fetchBalanceByMonth(
+          query.message.chat.id,
+          month,
+          "INGRESO"
+        );
+        const expensesBalanceByMonth = await fetchBalanceByMonth(
+          query.message.chat.id,
+          month,
+          "EGRESO"
+        );
+        const savingsBalanceByMonth = await fetchBalanceByMonth(
+          query.message.chat.id,
+          month,
+          "AHORROS"
+        );
+        const generalBalanceByMonth =
+          incomeBalanceByMonth - expensesBalanceByMonth - savingsBalanceByMonth;
+        if (
+          incomeBalanceByMonth === 0 &&
+          expensesBalanceByMonth === 0 &&
+          savingsBalanceByMonth === 0
+        ) {
+          textMesssage = botReplies[33]
+            .replace("$month", await getMonthString(month))
+            .replace("$currentYear", new Date().getFullYear());
+        } else {
+          textMesssage = botReplies[32]
+            .replace("$month", await getMonthString(month))
+            .replace(
+              "$income",
+              await numberFormater(incomeBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$expenses",
+              await numberFormater(expensesBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$savings",
+              await numberFormater(savingsBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$balance",
+              await numberFormater(generalBalanceByMonth, currentUser.currency)
+            );
+        }
+        inline_keyboard = [
+          [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+        ];
+        await optionsEdit(
+          textMesssage,
+          query.message.chat.id,
+          bot,
+          inline_keyboard,
+          messageId
         );
       }
       break;
