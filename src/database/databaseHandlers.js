@@ -17,9 +17,8 @@ export async function fetchUsers() {
   }
 }
 
-
 export async function createNewUser(chatId, userProfile) {
-  const {first_name, last_name, username, email, currency} = userProfile
+  const { first_name, last_name, username, email, currency } = userProfile;
   const { error } = await supabase.from("users").insert({
     first_name: first_name ? first_name.toLowerCase() : null,
     last_name: last_name ? last_name.toLowerCase() : null,
@@ -153,12 +152,30 @@ export async function editProfile(editProfileObject, chatId) {
       .from("users")
       .update(updateData)
       .eq("id", userId);
-      if (error){
-        throw error
-      }
-      return {success: true, error: ""}
+    if (error) {
+      throw error;
+    }
+    return { success: true, error: "" };
   } catch (error) {
     console.log(error);
-    return {success: false, error: "Error intentando editar el perfil"}
+    return { success: false, error: "Error intentando editar el perfil" };
+  }
+}
+
+export async function fetchUserCategories(chatId, type) {
+  try {
+    const userId = await fetchCurrentUserId(chatId);
+    const { data, error } = await supabase
+      .from("categories")
+      .select("name")
+      .eq("user_id", userId)
+      .eq("type", type);
+    if (error) {
+      throw error;
+    } else {
+      return data;
+    }
+  } catch (error) {
+    console.log(error);
   }
 }

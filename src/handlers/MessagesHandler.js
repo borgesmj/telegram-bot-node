@@ -6,6 +6,7 @@ import {
   editProfile,
   fetchCurrentUser,
   fetchCurrentUserId,
+  fetchUserCategories,
   insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botReplies.js";
@@ -179,7 +180,31 @@ export async function handleUserMessages(
       }
       newUserRecord.ammount = validateTransactionAmount.ammount;
       newUserRecord.date = new Date();
-      console.log(newUserRecord);
+      let userCategories = [];
+      userCategories = await fetchUserCategories(
+        msg.from.id,
+        newUserRecord.type
+      );
+      let inline_keyboard = [];
+      let tempRow = [];
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: "category_selection",
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await optionsSend(botReplies[25], msg.from.id, bot, inline_keyboard);
+      return;
     default:
       break;
   }

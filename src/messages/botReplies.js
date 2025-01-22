@@ -56,4 +56,7 @@ export const botReplies = [
   "🤖\n\nAhora vas a enviarme el monto de la transacción. Solo deben ser números, si deseas colocar decimales, escribe un punto. Por ejemplo: `XXXXXX.50`\n\nPara cancelar, haz click en el botón de abajo",
   // ! 24
   "🤖\n\n*NUEVO EGRESO*\n\nEnviame el nombre de la transaccion.\n\nPara cancelar, haz click en el botón de abajo",
+  // ! 25
+  "🤖\n\nElige la categoria de esta transacción. Si deseas cancelar, haz click en el botón de abajo",
+  // ! 26
 ];
