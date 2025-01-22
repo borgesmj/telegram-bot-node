@@ -28,6 +28,7 @@ export async function handleUserQueries(
   let chatId = query.message.chat.id;
   let messageId = query.message.message_id;
   let confirmationMessage = "";
+  let textMesssage = "";
   const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -290,8 +291,8 @@ export async function handleUserQueries(
         inline_keyboard,
         messageId
       );
-      /**
-       * 
+      return;
+    case "see_balance_history_btn":
       const incomeBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "INGRESO"
@@ -304,10 +305,30 @@ export async function handleUserQueries(
         currentUser.id,
         "AHORROS"
       );
-      console.log("Total Ingresos: ", incomeBalance);
-      console.log("Total egresos: ", expenseBalance);
-      console.log("Total Ahorros: ", savingsBalance);
-      */
+      const generalBalance = incomeBalance - expenseBalance - savingsBalance;
+      textMesssage = botReplies[30]
+        .replace(
+          "$income",
+          await numberFormater(incomeBalance, currentUser.currency)
+        )
+        .replace(
+          "$expenses",
+          await numberFormater(expenseBalance, currentUser.currency)
+        )
+        .replace(
+          "$savings",
+          await numberFormater(savingsBalance, currentUser.currency)
+        ).replace("$balance", await numberFormater(generalBalance, currentUser.currency));
+      inline_keyboard = [
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        textMesssage,
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
       return;
     default:
       if (query.data.startsWith("category-selection-option")) {

@@ -47,7 +47,7 @@ export const botReplies = [
   // ! 19
   "Perfil actualizado con exito 🎉",
   // ! 20
-  "\Para finalizar, haz click en /ConfigurarEgresos",
+  "Para finalizar, haz click en /ConfigurarEgresos",
   // ! 21
   "Para finalizar, haz click en /hecho",
   // ! 22
@@ -65,5 +65,7 @@ export const botReplies = [
   // ! 28
   "🤖\n\nTus ahorros fueron guardados con éxito 💰",
   // !29
-  "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`"
+  "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`",
+  // ! 30
+  "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
 ];
