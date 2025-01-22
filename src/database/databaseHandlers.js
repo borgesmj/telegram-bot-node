@@ -218,3 +218,34 @@ export async function fetchTransactionsAndBalance(userId, type) {
   }
 }
 
+function getRange(month) {
+  const currentYear = new Date().getFullYear();
+  const startDate = new Date(currentYear, month - 1, 1);
+  const endDate = new Date(currentYear, month, 0);
+  endDate.setHours(23, 59, 59, 999);
+  return {
+    start: startDate.toISOString(),
+    end: endDate.toISOString(),
+  };
+}
+export async function fetchBalanceByMonth(userId, month, type) {
+  const { start, end } = getRange(month);
+  let totalAmmount = 0
+  const user_id = await fetchCurrentUserId(userId)
+  try {
+    const { data, error } = await supabase
+      .from("records")
+      .select("monto")
+      .gte("created_at", start)
+      .lte("created_at", end)
+      .eq("user_id", user_id)
+      .eq("record_type", type);
+    if (error) {
+      throw error;
+    }
+    totalAmmount = data.reduce((acc, cur) => acc + cur.monto, 0);
+    return totalAmmount
+  } catch (error) {
+    console.log("error haciendo fetch por mes", error);
+  }
+}

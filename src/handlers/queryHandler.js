@@ -1,6 +1,7 @@
 import {
   createNewRecord,
   createNewSaving,
+  fetchBalanceByMonth,
   fetchCurrentUser,
   fetchTransactionsAndBalance,
 } from "../database/databaseHandlers.js";
@@ -318,7 +319,58 @@ export async function handleUserQueries(
         .replace(
           "$savings",
           await numberFormater(savingsBalance, currentUser.currency)
-        ).replace("$balance", await numberFormater(generalBalance, currentUser.currency));
+        )
+        .replace(
+          "$balance",
+          await numberFormater(generalBalance, currentUser.currency)
+        );
+      inline_keyboard = [
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        textMesssage,
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_balance_current_month_btn":
+      const today = new Date();
+      const getMonth = today.getMonth() + 1;
+      const incomeBalanceCurrentMonth = await fetchBalanceByMonth(
+        query.message.chat.id,
+        getMonth,
+        "INGRESO"
+      );
+      const expensesBalanceCurrentMonth = await fetchBalanceByMonth(
+        query.message.chat.id,
+        getMonth,
+        "EGRESO"
+      );
+      const savingsBalanceCurrentMonth = await fetchBalanceByMonth(
+        query.message.chat.id,
+        getMonth,
+        "AHORROS"
+      );
+      const generalBalanceCurrentMonth = incomeBalanceCurrentMonth - expensesBalanceCurrentMonth - savingsBalanceCurrentMonth;
+      textMesssage = botReplies[31]
+        .replace(
+          "$income",
+          await numberFormater(incomeBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace(
+          "$expenses",
+          await numberFormater(expensesBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace(
+          "$savings",
+          await numberFormater(savingsBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace(
+          "$balance",
+          await numberFormater(generalBalanceCurrentMonth, currentUser.currency)
+        );
       inline_keyboard = [
         [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
       ];

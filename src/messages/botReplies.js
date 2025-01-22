@@ -68,4 +68,6 @@ export const botReplies = [
   "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`",
   // ! 30
   "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
+  // ! 31
+  "🤖\n\nResumen de tus finanzas del mes actual:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
 ];
