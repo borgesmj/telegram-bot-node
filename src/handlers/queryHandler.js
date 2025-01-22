@@ -178,6 +178,20 @@ export async function handleUserQueries(
         state: STATES.WAITING_FOR_TRANSACTION_NAME,
       };
       return;
+      case "new_withdraw":
+      newUserRecord.type = "EGRESO";
+      await optionsEdit(
+        botReplies[24],
+        query.message.chat.id,
+        bot,
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_TRANSACTION_NAME,
+      };
+      return;
     default:
       break;
   }
