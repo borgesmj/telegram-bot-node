@@ -8,6 +8,7 @@ import messageSender from "../senders/messageSender.js";
 import { optionsEdit, optionsSend } from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import capitalizeWords from "../utils/capitalizeWords.js";
+import numberFormater from "../utils/numberFormater.js";
 
 export async function handleUserQueries(
   query,
@@ -260,7 +261,7 @@ export async function handleUserQueries(
         botReplies[26]
           .replace("$type", type)
           .replace("$details", details)
-          .replace("$ammount", `${ammount} ${currentUser.currency}`)
+          .replace("$ammount", `${await numberFormater(ammount, currentUser.currency)}`)
           .replace("$category", category),
         query.message.chat.id,
         bot,
