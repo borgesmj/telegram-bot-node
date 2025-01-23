@@ -23,11 +23,19 @@ export default async function addNewCategory(newTransactionCategory, msg, bot) {
     console.log("error, desde message hanlder");
   } else {
     if (newTransactionCategory.type === "INGRESO") {
-      await messageSender(msg.from.id, botReplies[11], bot);
+      await messageSender(
+        msg.from.id,
+        botReplies[34].replace("$category", msg.text),
+        bot
+      );
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender(msg.from.id, botReplies[20], bot);
     } else {
-      await messageSender(msg.from.id, botReplies[12], bot);
+      await messageSender(
+        msg.from.id,
+        botReplies[34].replace("$category", msg.text),
+        bot
+      );
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender(msg.from.id, botReplies[21], bot);
     }

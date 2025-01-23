@@ -73,5 +73,7 @@ export const botReplies = [
   // ! 32
   "🤖\n\nResumen de tus finanzas del mes de *$month*:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
   // ! 33
-  "🤖\n\nDisculpa, no hay movimientos guardados para el mes de $month del $currentYear"
+  "🤖\n\nDisculpa, no hay movimientos guardados para el mes de $month del $currentYear",
+  // ! 34
+  "🤖\n\n👍 $category fué agregada con exito.\n\nSi quieres seguir agregando, pon una siguiente categoria, de una a la vez"
 ];

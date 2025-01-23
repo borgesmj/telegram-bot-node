@@ -52,7 +52,6 @@ export default async function commandHandler(
       }
       return;
     case "EstaBienAsi":
-      console.log(newUserProfile)
       await messageSender(
         chatId,
         botReplies[2].replace("%username", msg.from.first_name),
