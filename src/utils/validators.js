@@ -1,6 +1,12 @@
 import { botReplies } from "../messages/botReplies.js";
 
 export async function validateEmail(email) {
+  if (email.length > 50) {
+    return {
+      success: false,
+      error: "🤖\n\nEl email que quieres guardar es demasiado largo",
+    };
+  }
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!regex.test(email)) {
     return { success: false, error: botReplies[7] };
@@ -12,12 +18,20 @@ export async function validateEmail(email) {
 export async function validateText(text) {
   if (!text) {
     return { success: false, error: botReplies[9] };
+  } else if (text.length > 250) {
+    return {
+      success: false,
+      error: "🤖\n\nEl texto que quieres introducir es demasiado largo",
+    };
   } else {
     return { success: true, error: "" };
   }
 }
 
 export async function validateIsNumber(text) {
+  if (text.length > 13){
+    return {success: false, error: "🤖\n\nEl numero que quieres introducir es demasiado largo\n\nEl numero puede tener hasta 10 digitos y  2 decimales"}
+  }
   const regex = /^[0-9]+(\.[0-9]{2})?$/;
   let userInput = "";
   if (!text.includes(".")) {
@@ -26,8 +40,8 @@ export async function validateIsNumber(text) {
     userInput = text;
   }
   if (!regex.test(userInput)) {
-    return { success: false, error: botReplies[15] , ammount: ""};
+    return { success: false, error: botReplies[15], ammount: "" };
   } else {
-    return { success: true, error: "" , ammount: Number(userInput)};
+    return { success: true, error: "", ammount: Number(userInput) };
   }
 }
