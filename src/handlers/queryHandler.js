@@ -5,6 +5,7 @@ import {
   fetchCurrentUser,
   fetchTransactionsAndBalance,
 } from "../database/databaseHandlers.js";
+import { decryptText } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
@@ -51,12 +52,22 @@ export async function handleUserQueries(
           },
         ],
       ];
+      const decriptedProfile = {
+        dec_first_name: decryptText(first_name),
+        dec_last_name: decryptText(last_name),
+        dec_email: decryptText(email),
+        dec_telegram_username: decryptText(telegram_username),
+      };
+      const { dec_first_name, dec_last_name, dec_email, dec_telegram_username } = decriptedProfile;
       optionsEdit(
         botReplies[18]
-          .replace("$userFirstName", (await capitalizeWords(first_name)) || "")
-          .replace("$userLastName", (await capitalizeWords(last_name)) || "")
-          .replace("$userEmail ", email || "")
-          .replace("$username", `@${telegram_username}` || "")
+          .replace(
+            "$userFirstName",
+            (await capitalizeWords(dec_first_name)) || ""
+          )
+          .replace("$userLastName", (await capitalizeWords(dec_last_name)) || "")
+          .replace("$userEmail ", dec_email || "")
+          .replace("$username", `@${dec_telegram_username}` || "")
           .replace("$userCurrency", currency || ""),
         chatId,
         bot,

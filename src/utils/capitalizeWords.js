@@ -1,6 +1,6 @@
 export default async function capitalizeWords(string) {
   let newString = "";
-  if (string === null) {
+  if (string === null || string === "" || string === undefined) {
     return newString;
   } else {
     newString = string;

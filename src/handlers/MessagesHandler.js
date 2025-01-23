@@ -9,6 +9,7 @@ import {
   fetchUserCategories,
   insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
+import { encrypText } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botReplies.js";
 import sendMenu from "../senders/menuSender.js";
 import messageSender from "../senders/messageSender.js";
@@ -147,7 +148,7 @@ export async function handleUserMessages(
         await messageSender(msg.from.id, validateUserInputText.error, bot);
         return;
       }
-      editProfileObject.value = msg.text.toLowerCase();
+      editProfileObject.value = encrypText(msg.text.toLowerCase(), currentUser.user_iv);
       const editProfileData = await editProfile(editProfileObject, msg.from.id);
       if (!editProfileData.success) {
         await messageSender(msg.from.id, editProfileData.error, bot);

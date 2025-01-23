@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { encrypText } from "../helpers/encryptText.js";
 dotenv.config();
 const supabaseUrl = "https://cahmyhmvtrnmrlktnjlf.supabase.co";
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -18,14 +19,15 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  const { first_name, last_name, username, email, currency } = userProfile;
+  const { first_name, last_name, username, email, currency, user_iv } = userProfile;
   const { error } = await supabase.from("users").insert({
-    first_name: first_name ? first_name.toLowerCase() : null,
-    last_name: last_name ? last_name.toLowerCase() : null,
-    telegram_username: username,
+    first_name: first_name ? encrypText(first_name.toLowerCase(), user_iv) : null,
+    last_name: last_name ? encrypText(last_name.toLowerCase(), user_iv) : null,
+    telegram_username: encrypText(username, user_iv),
     telegram_id: chatId,
-    email: email ? email.toLowerCase() : null,
+    email: email ? encrypText(email.toLowerCase(), user_iv) : null,
     currency: currency || null,
+    user_iv: user_iv||null
   });
   if (error) {
     console.log("Error creando un usuario nuevo a la base de datos", error);
