@@ -31,6 +31,7 @@ export async function handleUserQueries(
   let messageId = query.message.message_id;
   let confirmationMessage = "";
   let textMesssage = "";
+  let selectedMonth = 0;
   const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -209,6 +210,9 @@ export async function handleUserQueries(
       };
       return;
     case "confirm_transaction":
+      if (userStates[query.message.chat.id] !== "waiting_for_confirmation") {
+        return;
+      }
       const sendNewTransaction = await createNewRecord(newUserRecord);
       if (!sendNewTransaction.success) {
         await messageSender(
@@ -249,6 +253,9 @@ export async function handleUserQueries(
       );
       return;
     case "confirm_new_savings_btn":
+      if (userStates[query.message.chat.id] !== "waiting_for_confirmation") {
+        return;
+      }
       const saveNewSavingTable = await createNewSaving(newUserRecord);
       const saveNewSavingsRecord = await createNewRecord(newUserRecord);
       if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
@@ -338,20 +345,20 @@ export async function handleUserQueries(
       return;
     case "see_balance_current_month_btn":
       const today = new Date();
-      const getMonth = today.getMonth() + 1;
+      selectedMonth = today.getMonth() + 1;
       const incomeBalanceCurrentMonth = await fetchBalanceByMonth(
         query.message.chat.id,
-        getMonth,
+        selectedMonth,
         "INGRESO"
       );
       const expensesBalanceCurrentMonth = await fetchBalanceByMonth(
         query.message.chat.id,
-        getMonth,
+        selectedMonth,
         "EGRESO"
       );
       const savingsBalanceCurrentMonth = await fetchBalanceByMonth(
         query.message.chat.id,
-        getMonth,
+        selectedMonth,
         "AHORROS"
       );
       const generalBalanceCurrentMonth =
@@ -379,7 +386,18 @@ export async function handleUserQueries(
           await numberFormater(generalBalanceCurrentMonth, currentUser.currency)
         );
       inline_keyboard = [
-        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+        [
+          {
+            text: "Regresar",
+            callback_data: "back_to_menu_btn",
+          },
+        ],
+        [
+          {
+            text: "Ver detalles",
+            callback_data: "see_balance-current-month-details-btn",
+          },
+        ],
       ];
       await optionsEdit(
         textMesssage,
@@ -470,6 +488,7 @@ export async function handleUserQueries(
             `${await numberFormater(ammount, currentUser.currency)}`
           )
           .replace("$category", category);
+        userStates[query.message.chat.id] = STATES.WAITING_FOR_CONFIRMATION;
         await sendConfirmation(
           confirmationMessage,
           "confirm_transaction",
@@ -477,20 +496,20 @@ export async function handleUserQueries(
           query.message.chat.id
         );
       } else if (query.data.startsWith("balance-month")) {
-        const month = query.data.split("-")[2];
+        selectedMonth = query.data.split("-")[2];
         const incomeBalanceByMonth = await fetchBalanceByMonth(
           query.message.chat.id,
-          month,
+          selectedMonth,
           "INGRESO"
         );
         const expensesBalanceByMonth = await fetchBalanceByMonth(
           query.message.chat.id,
-          month,
+          selectedMonth,
           "EGRESO"
         );
         const savingsBalanceByMonth = await fetchBalanceByMonth(
           query.message.chat.id,
-          month,
+          selectedMonth,
           "AHORROS"
         );
         const generalBalanceByMonth =
@@ -501,11 +520,14 @@ export async function handleUserQueries(
           savingsBalanceByMonth === 0
         ) {
           textMesssage = botReplies[33]
-            .replace("$month", await getMonthString(month))
+            .replace("$month", await getMonthString(selectedMonth))
             .replace("$currentYear", new Date().getFullYear());
+          inline_keyboard = [
+            [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+          ];
         } else {
           textMesssage = botReplies[32]
-            .replace("$month", await getMonthString(month))
+            .replace("$month", await getMonthString(selectedMonth))
             .replace(
               "$income",
               await numberFormater(incomeBalanceByMonth, currentUser.currency)
@@ -522,10 +544,16 @@ export async function handleUserQueries(
               "$balance",
               await numberFormater(generalBalanceByMonth, currentUser.currency)
             );
+          inline_keyboard = [
+            [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+            [
+              {
+                text: "Ver detalles",
+                callback_data: "see_balance_details-btn",
+              },
+            ],
+          ];
         }
-        inline_keyboard = [
-          [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-        ];
         await optionsEdit(
           textMesssage,
           query.message.chat.id,

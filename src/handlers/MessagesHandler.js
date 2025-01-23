@@ -222,6 +222,7 @@ export async function handleUserMessages(
         "$ammount",
         await numberFormater(newUserRecord.ammount, currentUser.currency)
       );
+      userStates[msg.from.id] = STATES.WAITING_FOR_CONFIRMATION;
       await sendConfirmation(
         confirmationMessage,
         "confirm_new_savings_btn",
