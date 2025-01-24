@@ -40,7 +40,7 @@ export async function handleUserQueries(
   let textMesssage = "";
   let selectedMonth = 0;
   let tempRow = [];
-  let userCategories = []
+  let userCategories = [];
   //const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -265,6 +265,7 @@ export async function handleUserQueries(
       newUserRecord.type = "AHORROS";
       newUserRecord.details = "Nuevos ahorros";
       newUserRecord.user_id = currentUser.id;
+      newUserRecord.category = "AHORROS"
       inline_keyboard = [
         [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
       ];
@@ -293,6 +294,7 @@ export async function handleUserQueries(
         );
         return;
       }
+      newUserRecord = {};
       await sendSticker(
         bot,
         query.message.chat.id,
@@ -591,6 +593,7 @@ export async function handleUserQueries(
       );
       await new Promise((resolve) => setTimeout(resolve, 200));
       await sendMenu(query.message.chat.id, bot);
+      newUserCategory = {};
       return;
     case "edit_exist_category_btn":
       inline_keyboard = [
@@ -639,7 +642,7 @@ export async function handleUserQueries(
         messageId
       );
       return;
-      case "edit_expenses_categories_btn":
+    case "edit_expenses_categories_btn":
       inline_keyboard = [];
       tempRow = [];
       userCategories = await fetchUserCategories(
@@ -670,21 +673,22 @@ export async function handleUserQueries(
         messageId
       );
       return;
-      case "confirm_edit_category_name":
-        if (
-          userStates[query.message.chat.id].state !== "waiting_for_confirmation"
-        ) {
-          return;
-        }
-        const editCategoryName = await updateUserCategory(editCategoryObject)
-        if (!editCategoryName.success){
-          await messageSender(query.message.chat.id, editCategoryName.error, bot)
-          return
-        }
-        await messageSender(query.message.chat.id, botReplies[44], bot)
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        await sendMenu(query.message.chat.id, bot);
-      return
+    case "confirm_edit_category_name":
+      if (
+        userStates[query.message.chat.id].state !== "waiting_for_confirmation"
+      ) {
+        return;
+      }
+      const editCategoryName = await updateUserCategory(editCategoryObject);
+      if (!editCategoryName.success) {
+        await messageSender(query.message.chat.id, editCategoryName.error, bot);
+        return;
+      }
+      editCategoryObject = {};
+      await messageSender(query.message.chat.id, botReplies[44], bot);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await sendMenu(query.message.chat.id, bot);
+      return;
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
@@ -785,8 +789,8 @@ export async function handleUserQueries(
           inline_keyboard,
           messageId
         );
-        editCategoryObject.oldName = categoryName
-        editCategoryObject.user_id = currentUser.id
+        editCategoryObject.oldName = categoryName;
+        editCategoryObject.user_id = currentUser.id;
       }
       break;
   }

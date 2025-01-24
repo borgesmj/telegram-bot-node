@@ -112,9 +112,12 @@ async function fetchCategoryId(categoryName, userId) {
 export async function createNewRecord(newUserRecord) {
   const { details, ammount, created_at, user_id, category, type } =
     newUserRecord;
+    console.log(newUserRecord)
   let categoryId = 0;
-  if (category) {
+  if (category !== "AHORROS") {
     categoryId = await fetchCategoryId(category, user_id);
+  } else{
+    categoryId = null
   }
   try {
     const { error } = await supabase.from("records").insert({
