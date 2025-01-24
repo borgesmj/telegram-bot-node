@@ -10,13 +10,15 @@ import sendMenu from "../senders/menuSender.js";
 import { generateUserIV } from "../helpers/encryptText.js";
 export default async function commandHandler(
   command,
-  bot,
-  msg,
-  newUserProfile,
-  userStates,
-  STATES,
-  currentUser,
-  newTransactionCategory
+    bot,
+    msg,
+    newUserProfile,
+    userStates,
+    STATES,
+    currentUser,
+    newTransactionCategory,
+    newUserRecord,
+    newUserCategory
 ) {
   const chatId = msg.chat.id;
   switch (command) {

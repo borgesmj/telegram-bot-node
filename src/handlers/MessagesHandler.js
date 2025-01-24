@@ -7,7 +7,6 @@ import {
   fetchCurrentUser,
   fetchCurrentUserId,
   fetchUserCategories,
-  insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { encrypText } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botReplies.js";
@@ -36,13 +35,14 @@ function changeUserEmail(userProfile, msg) {
 export async function handleUserMessages(
   bot,
   msg,
-  userProfile,
+  newUserProfile,
   userStates,
   STATES,
   currentUser,
   newTransactionCategory,
   newUserRecord,
-  editProfileObject
+  editProfileObject,
+  newUserCategory
 ) {
   const validateUserInputText = await validateText(msg.text);
   let confirmationMessage = "";
@@ -148,7 +148,10 @@ export async function handleUserMessages(
         await messageSender(msg.from.id, validateUserInputText.error, bot);
         return;
       }
-      editProfileObject.value = encrypText(msg.text.toLowerCase(), currentUser.user_iv);
+      editProfileObject.value = encrypText(
+        msg.text.toLowerCase(),
+        currentUser.user_iv
+      );
       const editProfileData = await editProfile(editProfileObject, msg.from.id);
       if (!editProfileData.success) {
         await messageSender(msg.from.id, editProfileData.error, bot);
@@ -227,6 +230,21 @@ export async function handleUserMessages(
       await sendConfirmation(
         confirmationMessage,
         "confirm_new_savings_btn",
+        bot,
+        msg.from.id
+      );
+      return;
+    case "waiting_for_new_category":
+      const validateNewCategory = await validateText(msg.text);
+      if (!validateNewCategory.success) {
+        await messageSender(msg.from.id, validateNewCategory.error, bot);
+        return;
+      }
+      newUserCategory.name = msg.text;
+      userStates[msg.from.id] = { state: STATES.WAITING_FOR_CONFIRMATION };
+      sendConfirmation(
+        botReplies[38].replace("$category", msg.text).replace("$type", newUserCategory.type),
+        "confirm_add_new_category_btn",
         bot,
         msg.from.id
       );

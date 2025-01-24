@@ -75,5 +75,15 @@ export const botReplies = [
   // ! 33
   "🤖\n\nDisculpa, no hay movimientos guardados para el mes de $month del $currentYear",
   // ! 34
-  "🤖\n\n👍 $category fué agregada con exito.\n\nSi quieres seguir agregando, pon una siguiente categoria, de una a la vez"
+  "🤖\n\n👍 $category fué agregada con exito.\n\nSi quieres seguir agregando, pon una siguiente categoria, de una a la vez",
+  // ! 35
+  "🤖\n\n¿Que quieres hacer?\n¿*Editar* una categoria ya existente o *agregar* una nueva?",
+  // ! 36
+  "🤖\n\nVamos a agregar una categoria nueva, por favor escribe el nombre de la categoria nueva y haces click en el botón de *enviar*",
+  // ! 37
+  "🤖\n\n¿En donde lo quieres almacenar?\n\n¿Ingreso o egreso?",
+  // ! 38
+  "🤖\n\nConfirma que quieres agregar *$category*, para *$type*",
+  // ! 39
+  "🤖\n\n👍 $category fué agregada con exito."
 ];

@@ -4,6 +4,7 @@ import {
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchTransactionsAndBalance,
+  insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { decryptText } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botReplies.js";
@@ -25,7 +26,9 @@ export async function handleUserQueries(
   userStates,
   editProfileObject,
   STATES,
-  newUserRecord
+  newUserRecord,
+  currentUser,
+  newUserCategory
 ) {
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
@@ -33,7 +36,7 @@ export async function handleUserQueries(
   let confirmationMessage = "";
   let textMesssage = "";
   let selectedMonth = 0;
-  const currentUser = await fetchCurrentUser(query.message.chat.id);
+  //const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
       const { first_name, last_name, email, telegram_username, currency } =
@@ -58,14 +61,22 @@ export async function handleUserQueries(
         dec_email: decryptText(email),
         dec_telegram_username: decryptText(telegram_username),
       };
-      const { dec_first_name, dec_last_name, dec_email, dec_telegram_username } = decriptedProfile;
+      const {
+        dec_first_name,
+        dec_last_name,
+        dec_email,
+        dec_telegram_username,
+      } = decriptedProfile;
       optionsEdit(
         botReplies[18]
           .replace(
             "$userFirstName",
             (await capitalizeWords(dec_first_name)) || ""
           )
-          .replace("$userLastName", (await capitalizeWords(dec_last_name)) || "")
+          .replace(
+            "$userLastName",
+            (await capitalizeWords(dec_last_name)) || ""
+          )
           .replace("$userEmail ", dec_email || "")
           .replace("$username", `@${dec_telegram_username}` || "")
           .replace("$userCurrency", currency || ""),
@@ -113,7 +124,7 @@ export async function handleUserQueries(
         ],
         [
           {
-            text: "Agregar categorias",
+            text: "Editar categorias",
             callback_data: "edit_categories_btn",
           },
         ],
@@ -486,6 +497,95 @@ export async function handleUserQueries(
         inline_keyboard,
         messageId
       );
+      return;
+    case "edit_categories_btn":
+      inline_keyboard = [
+        [
+          {
+            text: "Editar",
+            callback_data: "edit_exist_category_btn",
+          },
+          { text: "Agregar", callback_data: "add_new_category_btn" },
+        ],
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        botReplies[35],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "add_new_category_btn":
+      inline_keyboard = [
+        [
+          { text: "Ingreso", callback_data: "add_new_income_category_btn" },
+          { text: "Egreso", callback_data: "add_new_expense_category_btn" },
+        ],
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        botReplies[37],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "add_new_income_category_btn":
+      newUserCategory.type = "INGRESO";
+      newUserCategory.user_id = currentUser.id;
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        botReplies[36],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_NEW_CATEGORY,
+      };
+      return;
+    case "add_new_expense_category_btn":
+      newUserCategory.type = "EGRESO";
+      newUserCategory.user_id = currentUser.id;
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await optionsEdit(
+        botReplies[36],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      userStates[query.message.chat.id] = {
+        state: STATES.WAITING_FOR_NEW_CATEGORY,
+      };
+      return;
+    case "confirm_add_new_category_btn":
+      if (
+        userStates[query.message.chat.id].state !== "waiting_for_confirmation"
+      ) {
+        return;
+      }
+      const addNewCategory = await insertNewTransactionCategory(
+        newUserCategory
+      );
+      if (!addNewCategory.success) {
+        await messageSender(query.message.chat.id, addNewCategory.error, bot);
+      }
+      await messageSender(
+        query.message.chat.id,
+        botReplies[39].replace("$category", newUserCategory.name),
+        bot
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await sendMenu(query.message.chat.id, bot);
       return;
     default:
       if (query.data.startsWith("category-selection-option")) {
