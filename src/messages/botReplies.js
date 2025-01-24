@@ -85,5 +85,15 @@ export const botReplies = [
   // ! 38
   "🤖\n\nConfirma que quieres agregar *$category*, para *$type*",
   // ! 39
-  "🤖\n\n👍 $category fué agregada con exito."
+  "🤖\n\n👍 $category fué agregada con exito.",
+  // ! 40
+  "🤖\n\n¿Cuales categorias quieres editar? ¿Ingreso o egreso?",
+  // ! 41
+  "🤖\n\nSelecciona la categoría que quieras editar",
+  // ! 42
+  "🤖\n\n¿Como quieres llamar ahora a la categoria $category?",
+  // ! 43
+  "🤖\n\nConfirma cambiar el nombre de *$oldname* ➡️ a *$newname*",
+  // ! 44
+  "🤖\n\nNombre cambiado con exito!!!"
 ];

@@ -4,7 +4,9 @@ import {
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchTransactionsAndBalance,
+  fetchUserCategories,
   insertNewTransactionCategory,
+  updateUserCategory,
 } from "../database/databaseHandlers.js";
 import { decryptText } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botReplies.js";
@@ -28,7 +30,8 @@ export async function handleUserQueries(
   STATES,
   newUserRecord,
   currentUser,
-  newUserCategory
+  newUserCategory,
+  editCategoryObject
 ) {
   let inline_keyboard = [];
   let chatId = query.message.chat.id;
@@ -36,6 +39,8 @@ export async function handleUserQueries(
   let confirmationMessage = "";
   let textMesssage = "";
   let selectedMonth = 0;
+  let tempRow = [];
+  let userCategories = []
   //const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -587,6 +592,99 @@ export async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 200));
       await sendMenu(query.message.chat.id, bot);
       return;
+    case "edit_exist_category_btn":
+      inline_keyboard = [
+        [
+          { text: "Ingreso", callback_data: "edit_income_categories_btn" },
+          { text: "Egreso", callback_data: "edit_expenses_categories_btn" },
+        ],
+        [{ text: "cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      optionsEdit(
+        botReplies[40],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_income_categories_btn":
+      inline_keyboard = [];
+      tempRow = [];
+      userCategories = await fetchUserCategories(
+        query.message.chat.id,
+        "INGRESO"
+      );
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: `category-edit-selection-option:${category.name}`,
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      optionsEdit(
+        botReplies[41],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+      case "edit_expenses_categories_btn":
+      inline_keyboard = [];
+      tempRow = [];
+      userCategories = await fetchUserCategories(
+        query.message.chat.id,
+        "EGRESO"
+      );
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: `category-edit-selection-option:${category.name}`,
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      optionsEdit(
+        botReplies[41],
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+      return;
+      case "confirm_edit_category_name":
+        if (
+          userStates[query.message.chat.id].state !== "waiting_for_confirmation"
+        ) {
+          return;
+        }
+        const editCategoryName = await updateUserCategory(editCategoryObject)
+        if (!editCategoryName.success){
+          await messageSender(query.message.chat.id, editCategoryName.error, bot)
+          return
+        }
+        await messageSender(query.message.chat.id, botReplies[44], bot)
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        await sendMenu(query.message.chat.id, bot);
+      return
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
@@ -672,6 +770,23 @@ export async function handleUserQueries(
           inline_keyboard,
           messageId
         );
+      } else if (query.data.startsWith("category-edit-selection-option")) {
+        let categoryName = query.data.split(":")[1];
+        inline_keyboard = [
+          [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+        ];
+        userStates[query.message.chat.id] = {
+          state: STATES.WAITING_FOR_CATEGORY_EDIT,
+        };
+        optionsEdit(
+          botReplies[42].replace("$category", categoryName),
+          query.message.chat.id,
+          bot,
+          inline_keyboard,
+          messageId
+        );
+        editCategoryObject.oldName = categoryName
+        editCategoryObject.user_id = currentUser.id
       }
       break;
   }

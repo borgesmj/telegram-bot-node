@@ -47,6 +47,7 @@ const STATES = {
   WAITING_FOR_TYPE: "waiting_for_type",
   WAITING_FOR_CONFIRMATION: "waiting_for_confirmation",
   WAITING_FOR_NEW_CATEGORY: "waiting_for_new_category",
+  WAITING_FOR_CATEGORY_EDIT: "waiting_for_category_edit",
   COMPLETED: "completed",
 };
 
@@ -55,8 +56,8 @@ let currentUser = {};
 let newTransactionCategory = {};
 let newUserRecord = {};
 let editProfileObject = {};
-let newUserCategory = {}
-
+let newUserCategory = {};
+let editCategoryObject = {};
 bot.onText(/\/(\w+)/, async (msg, match) => {
   try {
     currentUser = await fetchCurrentUser(msg.from.id);
@@ -74,7 +75,7 @@ bot.onText(/\/(\w+)/, async (msg, match) => {
     currentUser,
     newTransactionCategory,
     newUserRecord,
-    newUserCategory 
+    newUserCategory
   );
 });
 
@@ -98,7 +99,8 @@ bot.on("message", async (msg) => {
     newTransactionCategory,
     newUserRecord,
     editProfileObject,
-    newUserCategory 
+    newUserCategory,
+    editCategoryObject
   );
 });
 
@@ -112,7 +114,8 @@ bot.on("callback_query", async (query) => {
     STATES,
     newUserRecord,
     currentUser,
-    newUserCategory 
+    newUserCategory,
+    editCategoryObject
   );
 });
 bot.on("polling_error", (msg) => console.log(msg));

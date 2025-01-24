@@ -19,15 +19,18 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  const { first_name, last_name, username, email, currency, user_iv } = userProfile;
+  const { first_name, last_name, username, email, currency, user_iv } =
+    userProfile;
   const { error } = await supabase.from("users").insert({
-    first_name: first_name ? encrypText(first_name.toLowerCase(), user_iv) : null,
+    first_name: first_name
+      ? encrypText(first_name.toLowerCase(), user_iv)
+      : null,
     last_name: last_name ? encrypText(last_name.toLowerCase(), user_iv) : null,
     telegram_username: encrypText(username, user_iv),
     telegram_id: chatId,
     email: email ? encrypText(email.toLowerCase(), user_iv) : null,
     currency: currency || null,
-    user_iv: user_iv||null
+    user_iv: user_iv || null,
   });
   if (error) {
     console.log("Error creando un usuario nuevo a la base de datos", error);
@@ -232,8 +235,8 @@ function getRange(month) {
 }
 export async function fetchBalanceByMonth(userId, month, type) {
   const { start, end } = getRange(month);
-  let totalAmmount = 0
-  const user_id = await fetchCurrentUserId(userId)
+  let totalAmmount = 0;
+  const user_id = await fetchCurrentUserId(userId);
   try {
     const { data, error } = await supabase
       .from("records")
@@ -246,8 +249,28 @@ export async function fetchBalanceByMonth(userId, month, type) {
       throw error;
     }
     totalAmmount = data.reduce((acc, cur) => acc + cur.monto, 0);
-    return totalAmmount
+    return totalAmmount;
   } catch (error) {
     console.log("error haciendo fetch por mes", error);
+  }
+}
+
+export async function updateUserCategory(newCategory) {
+  const { oldName, newName, user_id } = newCategory;
+  try {
+    const categoryId = await fetchCategoryId(oldName, user_id);
+    const { error } = await supabase
+      .from("categories")
+      .update({ name: newName })
+      .eq("id", categoryId)
+      .eq("user_id", user_id);
+
+    if (error) {
+      throw error;
+    }
+    return { success: true, error: "" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, error: "Error actualizando la categoria" };
   }
 }

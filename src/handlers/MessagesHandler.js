@@ -42,7 +42,8 @@ export async function handleUserMessages(
   newTransactionCategory,
   newUserRecord,
   editProfileObject,
-  newUserCategory
+  newUserCategory,
+  editCategoryObject
 ) {
   const validateUserInputText = await validateText(msg.text);
   let confirmationMessage = "";
@@ -243,8 +244,26 @@ export async function handleUserMessages(
       newUserCategory.name = msg.text;
       userStates[msg.from.id] = { state: STATES.WAITING_FOR_CONFIRMATION };
       sendConfirmation(
-        botReplies[38].replace("$category", msg.text).replace("$type", newUserCategory.type),
+        botReplies[38]
+          .replace("$category", msg.text)
+          .replace("$type", newUserCategory.type),
         "confirm_add_new_category_btn",
+        bot,
+        msg.from.id
+      );
+      return;
+    case "waiting_for_category_edit":
+      const validateEditCategory = await validateText(msg.text);
+      if (!validateEditCategory.success) {
+        await messageSender(msg.from.id, validateEditCategory.error, bot);
+      }
+      editCategoryObject.newName = msg.text;
+      userStates[msg.from.id] = { state: STATES.WAITING_FOR_CONFIRMATION };
+      sendConfirmation(
+        botReplies[43]
+          .replace("$oldname", editCategoryObject.oldName)
+          .replace("$newname", editCategoryObject.newName),
+        "confirm_edit_category_name",
         bot,
         msg.from.id
       );
