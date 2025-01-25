@@ -856,7 +856,6 @@ export async function handleUserQueries(
             bot
           );
         }
-        console.log(transactionDetails[0])
         const { record_type, detalles, monto, categories } = transactionDetails[0];
         const formatedDate = adjustToLocalTime(transactionDetails[0].created_at);
         const  day = formatedDate.getDate()
