@@ -7,7 +7,7 @@ import {
 } from "../database/databaseHandlers.js";
 import { changeName } from "./MessagesHandler.js";
 import sendMenu from "../senders/menuSender.js";
-import { generateUserIV } from "../helpers/encryptText.js";
+import { decryptText, generateUserIV } from "../helpers/encryptText.js";
 export default async function commandHandler(
   command,
     bot,
@@ -48,7 +48,7 @@ export default async function commandHandler(
         currentUser = await fetchCurrentUser(msg.from.id);
         await messageSender(
           chatId,
-          botReplies[10].replace("%username", currentUser.first_name),
+          botReplies[10].replace("%username", decryptText(currentUser.first_name)),
           bot
         );
       }
