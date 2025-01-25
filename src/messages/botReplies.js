@@ -95,5 +95,7 @@ export const botReplies = [
   // ! 43
   "🤖\n\nConfirma cambiar el nombre de *$oldname* ➡️ a *$newname*",
   // ! 44
-  "🤖\n\nNombre cambiado con exito!!!"
+  "🤖\n\nNombre cambiado con exito!!!",
+  // ! 45
+  "🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`"
 ];

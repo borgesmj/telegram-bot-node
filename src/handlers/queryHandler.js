@@ -3,6 +3,7 @@ import {
   createNewSaving,
   fetchBalanceByMonth,
   fetchCurrentUser,
+  fetchTransactionById,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
   fetchUserCategories,
@@ -20,6 +21,7 @@ import {
 } from "../senders/optionsSender.js";
 import sendSticker from "../senders/stickerSender.js";
 import capitalizeWords from "../utils/capitalizeWords.js";
+import { adjustToLocalTime } from "../utils/dateFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import numberFormater from "../utils/numberFormater.js";
 
@@ -695,7 +697,7 @@ export async function handleUserQueries(
     case "see_records_list":
       inline_keyboard = [];
       tempRow = [];
-      recordListPage = 1
+      recordListPage = 1;
       transactionsList = await fetchTransactionsList(
         currentUser.id,
         recordListPage
@@ -844,8 +846,37 @@ export async function handleUserQueries(
         );
         editCategoryObject.oldName = categoryName;
         editCategoryObject.user_id = currentUser.id;
+      } else if (query.data.startsWith("details-transaction")) {
+        const transactionId = query.data.split(":")[1];
+        const transactionDetails = await fetchTransactionById(transactionId);
+        if (!transactionDetails) {
+          await messageSender(
+            query.message.chat.id,
+            "Lo siento, no pude encontrar ese movimiento, trata de consultar con soporte",
+            bot
+          );
+        }
+        console.log(transactionDetails[0])
+        const { record_type, detalles, monto, categories } = transactionDetails[0];
+        const formatedDate = adjustToLocalTime(transactionDetails[0].created_at);
+        const  day = formatedDate.getDate()
+        const month = formatedDate.getMonth()
+        const year = formatedDate.getFullYear()
+        const hours = formatedDate.getHours()
+        const minutes = formatedDate.getMinutes() 
+        textMesssage = botReplies[45].replace("$details", detalles ).replace("$category", categories.name ).replace("$type", record_type).replace("$ammount", await numberFormater(monto, currentUser.currency)).replace("$date", `${day}/${month+1}/${year}, ${hours}:${minutes}`);
+        inline_keyboard = [
+          [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+        ];
+        await optionsEdit(
+          textMesssage,
+          query.message.chat.id,
+          bot,
+          inline_keyboard,
+          messageId
+        );
       }
-      break;
+      return;
   }
   console.log("query data: ", query.data);
 }

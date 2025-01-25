@@ -280,15 +280,15 @@ export async function updateUserCategory(newCategory) {
 
 export async function fetchTransactionsList(userId, pageSize) {
   try {
-    const start = (pageSize - 1 ) * 10
-    const end = (start - pageSize) - 1
+    const start = (pageSize - 1) * 10;
+    const end = start - pageSize - 1;
     const { data, error } = await supabase
       .from("records")
       .select()
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .range(start, end)
-      .limit(10)
+      .limit(10);
     if (error) {
       throw error;
     }
@@ -297,3 +297,30 @@ export async function fetchTransactionsList(userId, pageSize) {
     console.log(error);
   }
 }
+
+export async function fetchTransactionById(transactionId) {
+  try {
+    const { data, error } = await supabase
+      .from("records")
+      .select(`
+        id,
+        detalles,
+        monto,
+        created_at,
+        user_id,
+        category_id,
+        record_type,
+        categories(name)
+      `)
+      .eq("id", transactionId);
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
