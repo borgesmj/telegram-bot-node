@@ -4,6 +4,7 @@ import {
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchTransactionsAndBalance,
+  fetchTransactionsList,
   fetchUserCategories,
   insertNewTransactionCategory,
   updateUserCategory,
@@ -41,6 +42,8 @@ export async function handleUserQueries(
   let selectedMonth = 0;
   let tempRow = [];
   let userCategories = [];
+  let recordListPage = 0;
+  let transactionsList = [];
   //const currentUser = await fetchCurrentUser(query.message.chat.id);
   switch (query.data) {
     case "my_profile":
@@ -96,7 +99,7 @@ export async function handleUserQueries(
         [{ text: "💰 Nuevo Ingreso", callback_data: "new_income" }],
         [{ text: "💸 Nuevo Retiro", callback_data: "new_withdraw" }],
         [{ text: "💵 Nuevo Ahorro", callback_data: "new_savings" }],
-        [{ text: "📋 Ver movimientos", callback_data: "see_records" }],
+        [{ text: "📋 Ver movimientos", callback_data: "see_records_list" }],
         [{ text: "📊 Ver saldos", callback_data: "see_balances" }],
         [{ text: "👤 Mi Perfil", callback_data: "my_profile" }],
         [{ text: "ℹ️ Info de este bot", callback_data: "about_bot" }],
@@ -265,7 +268,7 @@ export async function handleUserQueries(
       newUserRecord.type = "AHORROS";
       newUserRecord.details = "Nuevos ahorros";
       newUserRecord.user_id = currentUser.id;
-      newUserRecord.category = "AHORROS"
+      newUserRecord.category = "AHORROS";
       inline_keyboard = [
         [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
       ];
@@ -688,6 +691,56 @@ export async function handleUserQueries(
       await messageSender(query.message.chat.id, botReplies[44], bot);
       await new Promise((resolve) => setTimeout(resolve, 200));
       await sendMenu(query.message.chat.id, bot);
+      return;
+    case "see_records_list":
+      inline_keyboard = [];
+      tempRow = [];
+      recordListPage = 1
+      transactionsList = await fetchTransactionsList(
+        currentUser.id,
+        recordListPage
+      );
+      let newMessage = "";
+      newMessage += "💸 *Tus últimos movimientos*:\n\n";
+      const messages = await Promise.all(
+        transactionsList.map(async (transaction, index) => {
+          return `${index + 1}) ${
+            transaction.record_type === "INGRESO"
+              ? "🟢"
+              : transaction.record_type === "EGRESO"
+              ? "🔴"
+              : "🔵"
+          } *${transaction.detalles}* - ${await numberFormater(
+            transaction.monto,
+            currentUser.currency
+          )}\n`;
+        })
+      );
+      transactionsList.forEach((transaction, index) => {
+        tempRow.push({
+          text: `${index + 1}`,
+          callback_data: `details-transaction:${transaction.id}`,
+        });
+        if (tempRow.length === 5 || index === transactionsList.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      newMessage = `💸 *Tus últimos movimientos*:\n\n${messages.join("")}`;
+      inline_keyboard.push([
+        {
+          text: "Regresar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await optionsEdit(
+        newMessage,
+        query.message.chat.id,
+        bot,
+        inline_keyboard,
+        messageId
+      );
+
       return;
     default:
       if (query.data.startsWith("category-selection-option")) {

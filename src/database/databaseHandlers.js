@@ -112,12 +112,12 @@ async function fetchCategoryId(categoryName, userId) {
 export async function createNewRecord(newUserRecord) {
   const { details, ammount, created_at, user_id, category, type } =
     newUserRecord;
-    console.log(newUserRecord)
+  console.log(newUserRecord);
   let categoryId = 0;
   if (category !== "AHORROS") {
     categoryId = await fetchCategoryId(category, user_id);
-  } else{
-    categoryId = null
+  } else {
+    categoryId = null;
   }
   try {
     const { error } = await supabase.from("records").insert({
@@ -275,5 +275,25 @@ export async function updateUserCategory(newCategory) {
   } catch (error) {
     console.log(error);
     return { success: false, error: "Error actualizando la categoria" };
+  }
+}
+
+export async function fetchTransactionsList(userId, pageSize) {
+  try {
+    const start = (pageSize - 1 ) * 10
+    const end = (start - pageSize) - 1
+    const { data, error } = await supabase
+      .from("records")
+      .select()
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(start, end)
+      .limit(10)
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.log(error);
   }
 }
