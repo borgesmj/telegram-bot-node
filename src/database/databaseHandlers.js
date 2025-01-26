@@ -302,7 +302,8 @@ export async function fetchTransactionById(transactionId) {
   try {
     const { data, error } = await supabase
       .from("records")
-      .select(`
+      .select(
+        `
         id,
         detalles,
         monto,
@@ -311,7 +312,8 @@ export async function fetchTransactionById(transactionId) {
         category_id,
         record_type,
         categories(name)
-      `)
+      `
+      )
       .eq("id", transactionId);
 
     if (error) {
@@ -320,7 +322,66 @@ export async function fetchTransactionById(transactionId) {
 
     return data;
   } catch (error) {
-    console.log(error);
+    console.log("Error extrayendo esta transaccion: ", error);
   }
 }
 
+export async function fetchAllUserCategories(userId, type) {
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("name, id")
+      .eq("user_id", userId)
+      .eq("type", type);
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.log("Error extrayendo todas las categorias del usuario, ", error);
+  }
+}
+
+export async function fetchAmmountByCategoriesandMonth(
+  userId,
+  categoryId,
+  month
+) {
+  let totalAmmount = 0;
+  try {
+    const { start, end } = getRange(month);
+    const { data, error } = await supabase
+      .from("records")
+      .select("monto")
+      .eq("user_id", userId)
+      .eq("category_id", categoryId)
+      .gte("created_at", start)
+      .lte("created_at", end);
+    if (error) {
+      throw error;
+    }
+    totalAmmount = data.reduce((acc, cur) => acc + cur.monto, 0);
+    return totalAmmount;
+  } catch (error) {
+    console.log("Error realiando fetch por mes y categoria: ", error)
+  }
+}
+
+export async function fetchInitialBalance(userId, month) {
+  const { start, end } = getRange(month);
+  try {
+    const { data, error } = await supabase
+      .from("records")
+      .select("monto")
+      .eq("detalles", "Balance Inicial")
+      .eq("user_id", userId)
+      .gte("created_at", start)
+      .lte("created_at", end);
+    if (error) {
+      throw error;
+    }
+    return data[0].monto
+  } catch (error) {
+    console.log(error)
+  }
+}

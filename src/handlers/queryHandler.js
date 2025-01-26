@@ -1,8 +1,11 @@
 import {
   createNewRecord,
   createNewSaving,
+  fetchAllUserCategories,
+  fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
   fetchCurrentUser,
+  fetchInitialBalance,
   fetchTransactionById,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
@@ -429,7 +432,7 @@ export async function handleUserQueries(
         [
           {
             text: "Ver detalles",
-            callback_data: "see_balance-current-month-details-btn",
+            callback_data: "see_balance_details-btn",
           },
         ],
       ];
@@ -744,6 +747,93 @@ export async function handleUserQueries(
       );
 
       return;
+    case "see_balance_details-btn":
+      textMesssage = "";
+      await optionsEdit(
+        "Estoy cargando la informacion",
+        query.message.chat.id,
+        bot,
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      textMesssage += `Detalle de las transacciones en el mes de ${await getMonthString(
+        String(selectedMonth + 1)
+      )}\n\n*Ingresos:*\n\nEste mes recibiste un total de: `;
+      textMesssage += "`";
+      let totalAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "INGRESO"
+      );
+      textMesssage += `${totalAmmount}`;
+      textMesssage += "`\n\nDesglosado en:\n\n";
+      const incomeCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "INGRESO"
+      );
+      const expenseCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "EGRESO"
+      );
+      let initialBalance = await fetchInitialBalance(
+        currentUser.id,
+        selectedMonth +1
+      );
+      if (initialBalance > 0) {
+        textMesssage += `Balance inicial: ${initialBalance}\n`;
+      }
+      const incomeDetails = await Promise.all(
+        incomeCategories.map(async (category) => {
+          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          return `\t${category.name}: ${totalAmmountbyMonth}`;
+        })
+      );
+      textMesssage += incomeDetails.join("\n");
+      textMesssage += `\n`;
+      await optionsEdit(
+        "No te vayas, sigo calculando...",
+        query.message.chat.id,
+        bot,
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      textMesssage += "Y has tenido un total de gastos de: `";
+      totalAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "EGRESO"
+      );
+      textMesssage += `${totalAmmount}`;
+      textMesssage += "`\n\nDesglosado en:\n\n";
+      const expensesDetails = await Promise.all(
+        expenseCategories.map(async (category) => {
+          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          return `\t${category.name}: ${totalAmmountbyMonth}`;
+        })
+      );
+      textMesssage += expensesDetails.join("\n");
+      textMesssage += `\n\n`;
+      textMesssage += `Y tienes ahorrado un  total de ${await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "AHORROS"
+      )}`;
+      await optionsEdit(
+        textMesssage,
+        query.message.chat.id,
+        bot,
+        [[{ text: "Regresar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      return;
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
@@ -856,14 +946,25 @@ export async function handleUserQueries(
             bot
           );
         }
-        const { record_type, detalles, monto, categories } = transactionDetails[0];
-        const formatedDate = adjustToLocalTime(transactionDetails[0].created_at);
-        const  day = formatedDate.getDate()
-        const month = formatedDate.getMonth()
-        const year = formatedDate.getFullYear()
-        const hours = formatedDate.getHours()
-        const minutes = formatedDate.getMinutes() 
-        textMesssage = botReplies[45].replace("$details", detalles ).replace("$category", categories.name ).replace("$type", record_type).replace("$ammount", await numberFormater(monto, currentUser.currency)).replace("$date", `${day}/${month+1}/${year}, ${hours}:${minutes}`);
+        const { record_type, detalles, monto, categories } =
+          transactionDetails[0];
+        const formatedDate = adjustToLocalTime(
+          transactionDetails[0].created_at
+        );
+        const day = formatedDate.getDate();
+        const month = formatedDate.getMonth();
+        const year = formatedDate.getFullYear();
+        const hours = formatedDate.getHours();
+        const minutes = formatedDate.getMinutes();
+        textMesssage = botReplies[45]
+          .replace("$details", detalles)
+          .replace("$category", categories.name)
+          .replace("$type", record_type)
+          .replace(
+            "$ammount",
+            await numberFormater(monto, currentUser.currency)
+          )
+          .replace("$date", `${day}/${month + 1}/${year}, ${hours}:${minutes}`);
         inline_keyboard = [
           [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
         ];
