@@ -756,9 +756,9 @@ export async function handleUserQueries(
         [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
         messageId
       );
-      textMesssage += `Detalle de las transacciones en el mes de ${await getMonthString(
+      textMesssage += `*Detalles de las transacciones en el mes de ${await getMonthString(
         String(selectedMonth + 1)
-      )}\n\n*Ingresos:*\n\nEste mes recibiste un total de: `;
+      )}*\n\n🟢 *Ingresos totales:* `;
       textMesssage += "`";
       let totalAmmount = await fetchBalanceByMonth(
         query.message.chat.id,
@@ -766,7 +766,7 @@ export async function handleUserQueries(
         "INGRESO"
       );
       textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\nDesglosado en:\n\n";
+      textMesssage += "`\n\n";
       const incomeCategories = await fetchAllUserCategories(
         currentUser.id,
         "INGRESO"
@@ -775,13 +775,21 @@ export async function handleUserQueries(
         currentUser.id,
         "EGRESO"
       );
+      let tempMessage = "";
       let initialBalance = await fetchInitialBalance(
         currentUser.id,
-        selectedMonth +1
+        selectedMonth + 1
       );
       if (initialBalance > 0) {
-        textMesssage += `Balance inicial: ${initialBalance}\n`;
+        tempMessage += "- *Balance Inicial*: `";
+        tempMessage += await numberFormater(
+          initialBalance,
+          currentUser.currency
+        );
+        tempMessage += "`\n";
+        textMesssage += tempMessage;
       }
+      tempMessage = "";
       const incomeDetails = await Promise.all(
         incomeCategories.map(async (category) => {
           const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
@@ -789,11 +797,18 @@ export async function handleUserQueries(
             category.id,
             selectedMonth + 1
           );
-          return `\t${category.name}: ${totalAmmountbyMonth}`;
+          let categoryMessage = `- *${category.name}*:`;
+          categoryMessage += "` ";
+          categoryMessage += await numberFormater(
+            totalAmmountbyMonth,
+            currentUser.currency
+          );
+          categoryMessage += "`";
+          return categoryMessage;
         })
       );
       textMesssage += incomeDetails.join("\n");
-      textMesssage += `\n`;
+      textMesssage += `\n\n`;
       await optionsEdit(
         "No te vayas, sigo calculando...",
         query.message.chat.id,
@@ -801,14 +816,14 @@ export async function handleUserQueries(
         [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
         messageId
       );
-      textMesssage += "Y has tenido un total de gastos de: `";
+      textMesssage += "🔴 Gastos totales: `";
       totalAmmount = await fetchBalanceByMonth(
         query.message.chat.id,
         selectedMonth + 1,
         "EGRESO"
       );
       textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\nDesglosado en:\n\n";
+      textMesssage += "`\n\n";
       const expensesDetails = await Promise.all(
         expenseCategories.map(async (category) => {
           const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
@@ -816,16 +831,29 @@ export async function handleUserQueries(
             category.id,
             selectedMonth + 1
           );
-          return `\t${category.name}: ${totalAmmountbyMonth}`;
+          let categoryMessage = `- *${category.name}*:`;
+          categoryMessage += "` ";
+          categoryMessage += await numberFormater(
+            totalAmmountbyMonth,
+            currentUser.currency
+          );
+          categoryMessage += "`";
+          return categoryMessage;
         })
       );
       textMesssage += expensesDetails.join("\n");
       textMesssage += `\n\n`;
-      textMesssage += `Y tienes ahorrado un  total de ${await fetchBalanceByMonth(
+      let totalSavings = await fetchBalanceByMonth(
         query.message.chat.id,
         selectedMonth + 1,
         "AHORROS"
-      )}`;
+      );
+      textMesssage += "💰 *Ahorros del mes* `";
+      textMesssage += await numberFormater(
+        totalSavings,
+        currentUser.currency
+      )
+      textMesssage += "`\n"
       await optionsEdit(
         textMesssage,
         query.message.chat.id,
