@@ -1,7 +1,6 @@
 import { fetchCurrentUser, fetchUsers } from "../database/databaseHandlers.js";
 import { generateUserIV } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botMessages.js";
-import MessageSender from "../senders/botMessagesSender.js";
 
 export default async function commandHandler(
   command,
@@ -12,8 +11,8 @@ export default async function commandHandler(
 ) {
   const chatId = msg.from.id;
   let userProfile = {};
-  let inline_keyboard = []
-  let newTextMessage = ""
+  let inline_keyboard = [];
+  let newTextMessage = "";
   switch (command) {
     case "start":
       const allUsers = await fetchUsers();
@@ -30,11 +29,26 @@ export default async function commandHandler(
         userProfile.last_name = msg.from.last_name;
         userProfile.telegram_username = msg.from.username;
         userProfile.user_iv = await generateUserIV();
-        await messageSender.sendTextMessage(chatId, botReplies[0], [])
+        userManager.setUserProfile(chatId, userProfile);
+        currentUser = userManager.getUserProfile(chatId);
+        await messageSender.sendTextMessage(chatId, botReplies[0], []);
         await new Promise((resolve) => setTimeout(resolve, 200));
-        inline_keyboard = [[{text: "Esta bien asi", callback_data: "not-edit-first-name-btn"}, {text: "Cambiarlo", callback_data: "edit-fisrt-name-btn"}]]
-        newTextMessage = botReplies[1].replace("$username", msg.from.first_name)
-        await messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard)
+        inline_keyboard = [
+          [
+            { text: "Esta bien asi", callback_data: "not-edit-first-name-btn" },
+            { text: "Cambiarlo", callback_data: "edit-first-name-btn" },
+          ],
+        ];
+        newTextMessage = botReplies[1].replace(
+          "$username",
+          msg.from.first_name
+        );
+        await messageSender.sendTextMessage(
+          chatId,
+          newTextMessage,
+          inline_keyboard
+        );
+        userManager.setUserStatus(chatId, "initial");
       } else {
         userManager.setUserStatus(chatId, "initial");
         userProfile = await fetchCurrentUser(chatId);

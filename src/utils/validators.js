@@ -1,4 +1,5 @@
-import { botReplies } from "../messages/botReplies.js";
+import { botErrorMessages, } from "../messages/botErrorMessages.js";
+import { botReplies } from "../messages/botMessages.js";
 
 export async function validateEmail(email) {
   if (email.length > 50) {
@@ -9,7 +10,7 @@ export async function validateEmail(email) {
   }
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!regex.test(email)) {
-    return { success: false, error: botReplies[7] };
+    return { success: false, error: botErrorMessages[0] };
   } else {
     return { success: true, error: "" };
   }

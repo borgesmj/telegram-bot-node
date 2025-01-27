@@ -1,15 +1,54 @@
-export default async function handleUserQueries(query, userManager, currentUser, messagaSender){
-  let userProfile = {};
-  let inline_keyboard = []
-  let newTextMessage = ""
+import { createNewUser } from "../database/databaseHandlers.js";
+import { botReplies } from "../messages/botMessages.js";
+
+export default async function handleUserQueries(
+  query,
+  userManager,
+  currentUser,
+  messageSender
+) {
+  let inline_keyboard = [];
+  let newTextMessage = "";
   let messageId = query.message.message_id;
   let chatId = query.message.chat.id;
+  currentUser = userManager.getUserProfile(chatId);
   switch (query.data) {
-    case 'edit-fisrt-name-btn':
-      console.log("editar nombre")
-      break;
-  
+    case "edit-first-name-btn":
+      newTextMessage = botReplies[2];
+      inline_keyboard = [
+        [
+          {
+            text: "Mejor dejarlo asi",
+            callback_data: "not-edit-first-name-btn",
+          },
+        ],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting-for-new-user-name");
+      return;
+    case "not-edit-first-name-btn":
+      newTextMessage = botReplies[8].replace(
+        "$username",
+        currentUser.first_name
+      );
+      await messageSender.sendTextMessage(chatId, newTextMessage, []);
+      await userManager.setUserStatus(chatId, "waiting-for-new-email");
+      await messageSender.sendTextMessage(chatId, botReplies[4], []);
+      return;
+      case "confirm_new_profile_btn":
+        if(!userManager.getUserStatus(chatId) ==="waiting_for_confirmation" ){
+          return
+        }
+        await createNewUser(chatId, currentUser)
+        await messageSender.sendTextMessage(chatId, botReplies[9], [])
+        return
     default:
+      console.log(query.data);
       break;
   }
 }

@@ -19,21 +19,38 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  const { first_name, last_name, username, email, currency, user_iv } =
-    userProfile;
-  const { error } = await supabase.from("users").insert({
-    first_name: first_name
-      ? encrypText(first_name.toLowerCase(), user_iv)
-      : null,
-    last_name: last_name ? encrypText(last_name.toLowerCase(), user_iv) : null,
-    telegram_username: encrypText(username, user_iv),
-    telegram_id: chatId,
-    email: email ? encrypText(email.toLowerCase(), user_iv) : null,
-    currency: currency || null,
-    user_iv: user_iv || null,
-  });
-  if (error) {
-    console.log("Error creando un usuario nuevo a la base de datos", error);
+  try {
+    const {
+      first_name,
+      last_name,
+      telegram_username,
+      email,
+      currency,
+      user_iv,
+    } = userProfile;
+    const { error } = await supabase.from("users").insert({
+      first_name: first_name
+        ? encrypText(first_name.toLowerCase(), user_iv)
+        : null,
+      last_name: last_name
+        ? encrypText(last_name.toLowerCase(), user_iv)
+        : null,
+      telegram_username: encrypText(telegram_username, user_iv),
+      telegram_id: chatId,
+      email: email ? encrypText(email.toLowerCase(), user_iv) : null,
+      currency: currency || null,
+      user_iv: user_iv || null,
+    });
+    if (error) {
+      throw error;
+    }
+    return { success: true, error: "" };
+  } catch (error) {
+    console.log("Error creando un usuario nuevo a la base de datos");
+    return {
+      success: false,
+      error: "Error creando un usuario nuevo a la base de datos",
+    };
   }
 }
 
@@ -363,7 +380,7 @@ export async function fetchAmmountByCategoriesandMonth(
     totalAmmount = data.reduce((acc, cur) => acc + cur.monto, 0);
     return totalAmmount;
   } catch (error) {
-    console.log("Error realiando fetch por mes y categoria: ", error)
+    console.log("Error realiando fetch por mes y categoria: ", error);
   }
 }
 
@@ -380,8 +397,8 @@ export async function fetchInitialBalance(userId, month) {
     if (error) {
       throw error;
     }
-    return data[0].monto
+    return data[0].monto;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }

@@ -8,13 +8,30 @@ export default class MessageSender{
     }
 
     sendTextMessage(chatId, text, inline_keyboard){
-        this.text = text;
-        this.inlineKeyboard = inline_keyboard
-        this.bot.sendMessage(chatId, text, {
+        try {
+          this.bot.sendMessage(chatId, text, {
             reply_markup: {
               inline_keyboard: inline_keyboard,
             },
             parse_mode: "markdown",
           });
+        } catch (error) {
+          console.log("Error enviando el mensaje: ", error)
+        }
+    }
+
+    editTextMessage(chatId, text, inline_keyboard, messageId){
+      try {
+        this.bot.editMessageText(text, {
+          chat_id: chatId,
+          message_id: messageId,
+          reply_markup: {
+            inline_keyboard: inline_keyboard,
+          },
+          parse_mode: "markdown",
+        });
+      } catch (error) {
+        console.log("Error editando el ultimo mensaje", error)
+      }
     }
 }

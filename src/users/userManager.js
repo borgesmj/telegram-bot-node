@@ -9,7 +9,7 @@ export default class Users{
     }
 
     getUserStatus(chatId){
-        return this.userStatus[chatId]
+        return this.userStatus[chatId] || "inicial"
     }
 
     setUserProfile(chatId, userProfile){
@@ -17,6 +17,6 @@ export default class Users{
     }
 
     getUserProfile(chatId){
-        return this.userProfile[chatId]
+        return this.userProfile[chatId] 
     }
 }

@@ -26,9 +26,9 @@ dotenv.config();
 const userManager = new Users();
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
-const messageSender = new MessageSender(bot)
+const messageSender = new MessageSender(bot);
 // Filtrado de mensajes normales
-let currentUser = {}
+let currentUser = {};
 bot.on("message", async (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;
@@ -42,7 +42,6 @@ bot.onText(/\/(\w+)/, async (msg, match) => {
 });
 // filtrado de querys
 bot.on("callback_query", async (query) => {
-  console.log(query)
   await handleUserQueries(query, userManager, currentUser, messageSender);
 });
 // errores

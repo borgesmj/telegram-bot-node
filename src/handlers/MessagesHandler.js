@@ -1,5 +1,83 @@
-export default async function handleUserMessages(){
-  console.log("mensaje")
+import { botErrorMessages } from "../messages/botErrorMessages.js";
+import { botReplies } from "../messages/botMessages.js";
+import { validateEmail, validateText } from "../utils/validators.js";
+
+export default async function handleUserMessages(
+  msg,
+  userManager,
+  currentUser,
+  messageSender
+) {
+  let inline_keyboard = [];
+  let newTextMessage = "";
+  let chatId = msg.from.id;
+  let validatedText = null;
+  currentUser = userManager.getUserProfile(chatId);
+  const currentUserStatus = userManager.getUserStatus(chatId);
+  switch (currentUserStatus) {
+    case "waiting-for-new-user-name":
+      newTextMessage = botReplies[3].replace("$username", msg.text);
+      await userManager.setUserProfile(chatId, {
+        ...currentUser,
+        first_name: msg.text,
+      });
+      await messageSender.sendTextMessage(chatId, newTextMessage, []);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendTextMessage(chatId, botReplies[4], []);
+      await userManager.setUserStatus(chatId, "waiting-for-new-email");
+      return;
+    case "waiting-for-new-email":
+      const emailValidate = await validateEmail(msg.text);
+      if (!emailValidate.success) {
+        newTextMessage = botErrorMessages[0];
+        await messageSender.sendTextMessage(chatId, newTextMessage, []);
+        return;
+      }
+      newTextMessage = botReplies[5].replace("$email", msg.text);
+      await userManager.setUserProfile(chatId, {
+        ...currentUser,
+        email: msg.text,
+      });
+      await userManager.setUserStatus(chatId, "waiting_for_new_currency");
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendTextMessage(chatId, newTextMessage, []);
+      return;
+    case "waiting_for_new_currency":
+      validatedText = validateText(msg.text);
+      if (validatedText.success) {
+        newTextMessage = botErrorMessages[1];
+        await messageSender.sendTextMessage(chatId, newTextMessage, []);
+        return;
+      }
+      await userManager.setUserProfile(chatId, {
+        ...currentUser,
+        currency: msg.text,
+      });
+      currentUser = userManager.getUserProfile(chatId);
+      newTextMessage = botReplies[7]
+        .replace("$first_name", currentUser.first_name || "")
+        .replace("$user_lastname", currentUser.last_name || "")
+        .replace("$username", `@${currentUser.telegram_username}`)
+        .replace("$email", currentUser.email || "")
+        .replace("$currency", currentUser.currency || "");
+      inline_keyboard = [
+        [
+          { text: "Confirmar", callback_data: "confirm_new_profile_btn" },
+          {
+            text: "Comenzar de nuevo",
+            callback_data: "start_over_new_profile_btn",
+          },
+        ],
+      ];
+      await userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      await messageSender.sendTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard
+      );
+    default:
+      break;
+  }
 }
 /**
  * import signInUser from "../auth/signIn.js";
