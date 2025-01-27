@@ -41,7 +41,7 @@ export async function validateIsNumber(text) {
     userInput = text;
   }
   if (!regex.test(userInput)) {
-    return { success: false, error: botReplies[15], ammount: "" };
+    return { success: false, error: "🤖\n\nDisculpa, el monto debe ser un texto solamente con números", ammount: "" };
   } else {
     return { success: true, error: "", ammount: Number(userInput) };
   }

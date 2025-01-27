@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { encrypText } from "../helpers/encryptText.js";
+import { adjustToLocalTime } from "../utils/dateFormater.js";
 dotenv.config();
 const supabaseUrl = "https://cahmyhmvtrnmrlktnjlf.supabase.co";
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -40,13 +41,15 @@ export async function createNewUser(chatId, userProfile) {
       email: email ? encrypText(email.toLowerCase(), user_iv) : null,
       currency: currency || null,
       user_iv: user_iv || null,
+      created_at: adjustToLocalTime(new Date()),
     });
     if (error) {
       throw error;
+    } else {
+      return { success: true, error: "" };
     }
-    return { success: true, error: "" };
   } catch (error) {
-    console.log("Error creando un usuario nuevo a la base de datos");
+    console.log("Error creando un usuario nuevo a la base de datos", error);
     return {
       success: false,
       error: "Error creando un usuario nuevo a la base de datos",

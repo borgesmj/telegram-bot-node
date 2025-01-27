@@ -1,6 +1,18 @@
+import {
+  createNewRecord,
+  createNewSaving,
+  fetchCurrentUser,
+  fetchCurrentUserId,
+  insertNewTransactionCategory,
+} from "../database/databaseHandlers.js";
 import { botErrorMessages } from "../messages/botErrorMessages.js";
 import { botReplies } from "../messages/botMessages.js";
-import { validateEmail, validateText } from "../utils/validators.js";
+import { adjustToLocalTime } from "../utils/dateFormater.js";
+import {
+  validateEmail,
+  validateIsNumber,
+  validateText,
+} from "../utils/validators.js";
 
 export default async function handleUserMessages(
   msg,
@@ -11,8 +23,10 @@ export default async function handleUserMessages(
   let inline_keyboard = [];
   let newTextMessage = "";
   let chatId = msg.from.id;
+  currentUser = await fetchCurrentUser(chatId);
   let validatedText = null;
-  currentUser = userManager.getUserProfile(chatId);
+  let sendNewCategory = null;
+  let newUserRecord = {};
   const currentUserStatus = userManager.getUserStatus(chatId);
   switch (currentUserStatus) {
     case "waiting-for-new-user-name":
@@ -75,6 +89,110 @@ export default async function handleUserMessages(
         newTextMessage,
         inline_keyboard
       );
+      return;
+    case "waiting_for_new_income_categories":
+      validatedText = validateText(msg.text);
+      if (!validatedText) {
+        await messageSender.sendTextMessage(chatId, text, inline_keyboard);
+      }
+      sendNewCategory = await insertNewTransactionCategory({
+        name: msg.text,
+        user_id: currentUser.id,
+        type: "INGRESO",
+      });
+      if (!sendNewCategory.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          sendNewCategory.error,
+          inline_keyboard
+        );
+        return;
+      }
+      newTextMessage = botReplies[12].replace("$category", msg.text);
+      inline_keyboard = [
+        [
+          {
+            text: "Configurar categorias de egresos",
+            callback_data: "set_expenses_categories_btn",
+          },
+        ],
+      ];
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_expenses_categories":
+      validatedText = validateText(msg.text);
+      if (!validatedText) {
+        await messageSender.sendTextMessage(chatId, text, inline_keyboard);
+      }
+      sendNewCategory = await insertNewTransactionCategory({
+        name: msg.text,
+        user_id: currentUser.id,
+        type: "EGRESO",
+      });
+      if (!sendNewCategory.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          sendNewCategory.error,
+          inline_keyboard
+        );
+        return;
+      }
+      newTextMessage = botReplies[12].replace("$category", msg.text);
+      inline_keyboard = [
+        [
+          {
+            text: "Finalizar",
+            callback_data: "end_categories_configuration_btn",
+          },
+        ],
+      ];
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_initial_balance":
+      const validateInitialBalance = await validateIsNumber(msg.text);
+      if (!validateInitialBalance.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          validateInitialBalance.error,
+          []
+        );
+        return;
+      }
+      newUserRecord.details = "Balance Inicial";
+      newUserRecord.ammount = validateInitialBalance.ammount;
+      newUserRecord.created_at = adjustToLocalTime(new Date());
+      newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
+      newUserRecord.category = "";
+      newUserRecord.type = "INGRESO";
+      const setInitialBalance = await createNewRecord(newUserRecord);
+      if (!setInitialBalance.success) {
+        await messageSender(msg.from.id, setInitialBalance.error, bot);
+        return;
+      }
+      userManager.setUserStatus(chatId, "waiting_for_initial_savings");
+      await messageSender.sendTextMessage(chatId, botReplies[16], []);
+      return;
+      case "waiting_for_initial_savings":
+        const validateInitialSavings = await validateIsNumber(msg.text);
+        if (!validateInitialSavings.success) {
+          await messageSender(msg.from.id, validateInitialSavings.error, bot);
+          return;
+        }
+        const initialSavings = {};
+        initialSavings.ammount = validateInitialSavings.ammount;
+        initialSavings.user_id = await fetchCurrentUserId(msg.from.id);
+        const setInitialSavings = await createNewSaving(initialSavings);
+        if (!setInitialSavings.success) {
+          await messageSender(msg.from.id, setInitialSavings.error, bot);
+          return;
+        }
+        await messageSender.sendSticker(chatId, "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ")
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await messageSender.sendTextMessage(chatId, botReplies[17], [])
+        await userManager.setUserStatus(chatId, "initial")
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await messageSender.sendMenu(chatId)
+      return;
     default:
       break;
   }

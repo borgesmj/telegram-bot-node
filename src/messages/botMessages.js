@@ -20,5 +20,19 @@ export const botReplies = [
   // ! 9
   "🤖\n\nTu perfil ya fué guardado, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal. Ahora vamos a configurar las categorías de tus movimientos.",
   // ! 10
-  "🤖\n\nBienvenido de vuelta *$username*!!!"
+  "🤖\n\nBienvenido de vuelta *$username*!!!",
+  // ! 11
+  "🤖\n\nVas a ingresar las categorías de tus *INGRESOS* frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Salario`, `Freelance`\n\nColoca de uno a la vez",
+  // ! 12
+  "🤖\n\n👍 `$category` fué agregada con exito. Si quieres agregar otra categoría solo enviamela, de lo contrario, presiona el botón para continuar",
+  // ! 13
+  "🤖\n\nAhora as a ingresar las categorías de tus *INGRESOS* frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Arriendo`, `Moto`, `Comida`, `Salidas`\n\nColoca de uno a la vez",
+  // ! 14
+  "🤖\n\nPor último, vamos a configurar tus valores iniciales, eso me ayudará a llevar al dia tus cuentas",
+  // ! 15
+  "🤖\n\nComencemos con tu balance inicial, vas a escribir el monto de saldo que tienes en este momento, sin comas\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
+  // ! 16
+  "🤖\n\nAhora configuremos el monto inicial de tus ahorros. Escribe el numero completo sin comas. \n\nSi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`\n\nEn caso de que no tengas, escribe 0",
+  // ! 17
+  "🤖\n\nTu perfil está completo, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal.",
 ];

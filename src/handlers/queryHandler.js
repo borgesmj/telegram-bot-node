@@ -38,15 +38,40 @@ export default async function handleUserQueries(
       );
       await messageSender.sendTextMessage(chatId, newTextMessage, []);
       await userManager.setUserStatus(chatId, "waiting-for-new-email");
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await messageSender.sendTextMessage(chatId, botReplies[4], []);
       return;
-      case "confirm_new_profile_btn":
-        if(!userManager.getUserStatus(chatId) ==="waiting_for_confirmation" ){
-          return
-        }
-        await createNewUser(chatId, currentUser)
-        await messageSender.sendTextMessage(chatId, botReplies[9], [])
-        return
+    case "confirm_new_profile_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const newProfile = await createNewUser(chatId, currentUser);
+      if (!newProfile.success) {
+        await messageSender.sendTextMessage(chatId, newProfile.error, []);
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await messageSender.sendTextMessage(chatId, botReplies[9], []);
+      await userManager.setUserStatus(
+        chatId,
+        "waiting_for_new_income_categories"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendTextMessage(chatId, botReplies[11], []);
+      return;
+    case "set_expenses_categories_btn":
+      await messageSender.sendTextMessage(chatId, botReplies[13], []);
+      await userManager.setUserStatus(
+        chatId,
+        "waiting_for_expenses_categories"
+      );
+      return;
+    case "end_categories_configuration_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_balance")
+      await messageSender.sendTextMessage(chatId, botReplies[14], []);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendTextMessage(chatId, botReplies[15], [])
+      return;
     default:
       console.log(query.data);
       break;

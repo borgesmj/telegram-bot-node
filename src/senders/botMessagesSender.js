@@ -55,4 +55,12 @@ export default class MessageSender {
       console.log("Error al enviar el menu principal: ", error);
     }
   }
+
+  sendSticker(chatId, sticker_id) {
+    try {
+      this.bot.sendSticker(chatId, sticker_id);
+    } catch (error) {
+      console.log("No pudo enviarse el sticker, intente de nuevo: ", error);
+    }
+  }
 }
