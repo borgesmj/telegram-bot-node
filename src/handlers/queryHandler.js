@@ -1,4 +1,21 @@
-import {
+export default async function handleUserQueries(query, userManager, currentUser, messagaSender){
+  let userProfile = {};
+  let inline_keyboard = []
+  let newTextMessage = ""
+  let messageId = query.message.message_id;
+  let chatId = query.message.chat.id;
+  switch (query.data) {
+    case 'edit-fisrt-name-btn':
+      console.log("editar nombre")
+      break;
+  
+    default:
+      break;
+  }
+}
+
+/**
+ * import {
   createNewRecord,
   createNewSaving,
   fetchAllUserCategories,
@@ -28,7 +45,7 @@ import { adjustToLocalTime } from "../utils/dateFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import numberFormater from "../utils/numberFormater.js";
 
-export async function handleUserQueries(
+export default async function handleUserQueries(
   query,
   bot,
   userStates,
@@ -1008,3 +1025,5 @@ export async function handleUserQueries(
   }
   console.log("query data: ", query.data);
 }
+
+ */

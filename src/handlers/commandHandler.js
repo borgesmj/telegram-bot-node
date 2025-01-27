@@ -1,4 +1,55 @@
-import { botReplies } from "../messages/botReplies.js";
+import { fetchCurrentUser, fetchUsers } from "../database/databaseHandlers.js";
+import { generateUserIV } from "../helpers/encryptText.js";
+import { botReplies } from "../messages/botMessages.js";
+import MessageSender from "../senders/botMessagesSender.js";
+
+export default async function commandHandler(
+  command,
+  userManager,
+  msg,
+  currentUser,
+  messageSender
+) {
+  const chatId = msg.from.id;
+  let userProfile = {};
+  let inline_keyboard = []
+  let newTextMessage = ""
+  switch (command) {
+    case "start":
+      const allUsers = await fetchUsers();
+      let isUser = false;
+      allUsers.forEach((user) => {
+        if (user.telegram_id === chatId) {
+          isUser = true;
+        }
+      });
+      if (!isUser) {
+        userManager.setUserStatus(chatId, "initial");
+        userProfile.telegram_id = chatId;
+        userProfile.first_name = msg.from.first_name;
+        userProfile.last_name = msg.from.last_name;
+        userProfile.telegram_username = msg.from.username;
+        userProfile.user_iv = await generateUserIV();
+        await messageSender.sendTextMessage(chatId, botReplies[0], [])
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        inline_keyboard = [[{text: "Esta bien asi", callback_data: "not-edit-first-name-btn"}, {text: "Cambiarlo", callback_data: "edit-fisrt-name-btn"}]]
+        newTextMessage = botReplies[1].replace("$username", msg.from.first_name)
+        await messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard)
+      } else {
+        userManager.setUserStatus(chatId, "initial");
+        userProfile = await fetchCurrentUser(chatId);
+        userManager.setUserProfile(chatId, userProfile);
+        currentUser = userManager.getUserProfile(chatId);
+      }
+
+      break;
+
+    default:
+      break;
+  }
+}
+/**
+ * import { botReplies } from "../messages/botReplies.js";
 import messageSender from "../senders/messageSender.js";
 import {
   fetchUsers,
@@ -88,3 +139,5 @@ export default async function commandHandler(
       break;
   }
 }
+
+ */

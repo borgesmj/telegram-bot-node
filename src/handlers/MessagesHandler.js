@@ -1,4 +1,8 @@
-import signInUser from "../auth/signIn.js";
+export default async function handleUserMessages(){
+  console.log("mensaje")
+}
+/**
+ * import signInUser from "../auth/signIn.js";
 import {
   createNewRecord,
   createNewSaving,
@@ -32,7 +36,7 @@ function changeUserEmail(userProfile, msg) {
   return userProfile;
 }
 
-export async function handleUserMessages(
+export default async function handleUserMessages(
   bot,
   msg,
   newUserProfile,
@@ -272,3 +276,5 @@ export async function handleUserMessages(
       break;
   }
 }
+
+ */
