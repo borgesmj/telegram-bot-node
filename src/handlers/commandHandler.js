@@ -1,5 +1,5 @@
 import { fetchCurrentUser, fetchUsers } from "../database/databaseHandlers.js";
-import { generateUserIV } from "../helpers/encryptText.js";
+import { decryptText, generateUserIV } from "../helpers/encryptText.js";
 import { botReplies } from "../messages/botMessages.js";
 
 export default async function commandHandler(
@@ -54,6 +54,13 @@ export default async function commandHandler(
         userProfile = await fetchCurrentUser(chatId);
         userManager.setUserProfile(chatId, userProfile);
         currentUser = userManager.getUserProfile(chatId);
+        newTextMessage = botReplies[10].replace(
+          "$username",
+          await decryptText(currentUser.first_name)
+        );
+        await messageSender.sendTextMessage(chatId, newTextMessage, []);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        await messageSender.sendMenu(chatId)
       }
 
       break;

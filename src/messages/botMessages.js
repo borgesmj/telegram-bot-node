@@ -18,5 +18,7 @@ export const botReplies = [
   // ! 8
   "🤖\n\nGenial, te llamaré `$username`",
   // ! 9
-  "🤖\n\nTu perfil ya fué guardado, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal. Ahora vamos a configurar las categorías de tus movimientos."
+  "🤖\n\nTu perfil ya fué guardado, lo puedes ver en cualquier momento a traves de la opcion *Mi perfil* del menú principal. Ahora vamos a configurar las categorías de tus movimientos.",
+  // ! 10
+  "🤖\n\nBienvenido de vuelta *$username*!!!"
 ];
