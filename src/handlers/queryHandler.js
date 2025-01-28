@@ -176,6 +176,15 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "initial");
       userManager.setUserTransaction(chatId, {});
       return;
+    case "new_withdraw":
+      userManager.setUserTransaction(chatId, { type: "EGRESO" });
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[28],
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting_for_transaction_name");
     default:
       console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {

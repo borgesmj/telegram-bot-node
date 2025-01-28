@@ -54,5 +54,7 @@ export const botReplies = [
   // ! 26
   "🤖\n\nConfirma la transaccion:\n\n*Detalles:* `$details`\n*Monto:* `$ammount`\n*Categoria:* `$category`\n*Tipo:* `$type`",
   // ! 27
-  "🤖\n\nTu movimiento fue guardado con éxito"
+  "🤖\n\nTu movimiento fue guardado con éxito",
+  // !28
+  "🤖\n\n*NUEVO EGRESO*\n\nEnviame el nombre de la transaccion.\n\nPara cancelar, haz click en el botón de abajo",
 ];
