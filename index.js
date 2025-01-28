@@ -8,7 +8,7 @@ import commandHandler from "./src/handlers/commandHandler.js";
 import handleUserMessages from "./src/handlers/MessagesHandler.js";
 import handleUserQueries from "./src/handlers/queryHandler.js";
 import Users from "./src/users/userManager.js";
-import MessageSender from "./src/senders/botMessagesSender.js";
+import MessageSender from "./src/senders/MessageSender.class.js";
 // Express
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
