@@ -26,7 +26,7 @@ export const botReplies = [
   // ! 12
   "🤖\n\n👍 `$category` fué agregada con exito. Si quieres agregar otra categoría solo enviamela, de lo contrario, presiona el botón para continuar",
   // ! 13
-  "🤖\n\nAhora as a ingresar las categorías de tus *INGRESOS* frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Arriendo`, `Moto`, `Comida`, `Salidas`\n\nColoca de uno a la vez",
+  "🤖\n\nAhora vas a ingresar las categorías de tus *EGRESOS* frecuentes, comenzaremos por los *INGRESOS*, por ejemplo `Arriendo`, `Moto`, `Comida`, `Salidas`\n\nColoca de uno a la vez",
   // ! 14
   "🤖\n\nPor último, vamos a configurar tus valores iniciales, eso me ayudará a llevar al dia tus cuentas",
   // ! 15
@@ -38,9 +38,21 @@ export const botReplies = [
   // ! 18
   "🤖\n\nConfirma que el monto para tu balance inicial es de: `$ammount`,\n\nDe lo contrario, haz click en el boton *Escribir otro monto*",
   // ! 19
-"🤖\n\nEscribe cuál será el monto de tu balance incial. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
-// ! 20
-"🤖\n\nConfirma que el monto para tus ahorros iniciales es de: `$ammount`,\n\nDe lo contrario, haz click en el boton *Escribir otro monto*",
-// ! 21
-"🤖\n\nEscribe cuál será el monto de tus ahorros iniciales. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
+  "🤖\n\nEscribe cuál será el monto de tu balance incial. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
+  // ! 20
+  "🤖\n\nConfirma que el monto para tus ahorros iniciales es de: `$ammount`,\n\nDe lo contrario, haz click en el boton *Escribir otro monto*",
+  // ! 21
+  "🤖\n\nEscribe cuál será el monto de tus ahorros iniciales. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
+  // ! 22
+  "🤖\n\nComencemos nuevamente. Escribe, por favor, tu nombre",
+  // ! 23
+  "🤖\n\n*NUEVO INGRESO*\n\nEnviame el nombre de la transaccion.\n\nPara cancelar, haz click en el botón de abajo",
+  // ! 24
+  "🤖\n\nAhora vas a enviarme el monto de la transacción. Solo deben ser números, si deseas colocar decimales, escribe un punto. Por ejemplo: `XXXXXX.50`\n\nPara cancelar, haz click en el botón de abajo",
+  // !25
+  "🤖\n\nElige la categoria de esta transacción. Si deseas cancelar, haz click en el botón de abajo",
+  // ! 26
+  "🤖\n\nConfirma la transaccion:\n\n*Detalles:* `$details`\n*Monto:* `$ammount`\n*Categoria:* `$category`\n*Tipo:* `$type`",
+  // ! 27
+  "🤖\n\nTu movimiento fue guardado con éxito"
 ];

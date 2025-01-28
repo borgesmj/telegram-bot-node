@@ -6,6 +6,7 @@ import {
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
+import numberFormater from "../utils/numberFormater.js";
 
 export default async function handleUserQueries(
   query,
@@ -17,6 +18,7 @@ export default async function handleUserQueries(
   let newTextMessage = "";
   let messageId = query.message.message_id;
   let chatId = query.message.chat.id;
+  let confirmationMessage = "";
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -52,7 +54,10 @@ export default async function handleUserQueries(
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
         return;
       }
-      const newProfile = await createNewUser(chatId, userManager.getNewUser(chatId));
+      const newProfile = await createNewUser(
+        chatId,
+        userManager.getNewUser(chatId)
+      );
       if (!newProfile.success) {
         await messageSender.sendTextMessage(chatId, newProfile.error, []);
         return;
@@ -65,6 +70,10 @@ export default async function handleUserQueries(
       );
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender.sendTextMessage(chatId, botReplies[11], []);
+      return;
+    case "start_over_new_profile_btn":
+      await userManager.setUserStatus(chatId, "waiting-for-new-user-name");
+      await messageSender.sendTextMessage(chatId, botReplies[22], []);
       return;
     case "set_expenses_categories_btn":
       await messageSender.sendTextMessage(chatId, botReplies[13], []);
@@ -101,7 +110,7 @@ export default async function handleUserQueries(
         await messageSender(msg.from.id, setInitialBalance.error, bot);
         return;
       }
-      await userManager.setUserTransaction(chatId, {})
+      await userManager.setUserTransaction(chatId, {});
       userManager.setUserStatus(chatId, "waiting_for_initial_savings");
       await messageSender.sendTextMessage(chatId, botReplies[16], []);
       return;
@@ -132,16 +141,73 @@ export default async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 500));
       await messageSender.sendTextMessage(chatId, botReplies[17], []);
       await userManager.setUserStatus(chatId, "initial");
-      await userManager.setUserTransaction(chatId, {})
+      await userManager.setUserTransaction(chatId, {});
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender.sendMenu(chatId);
       return;
+    case "new_income":
+      userManager.setUserTransaction(chatId, { type: "INGRESO" });
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[23],
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting_for_transaction_name");
+      return;
+    case "confirm_transaction":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: adjustToLocalTime(new Date()),
+        user_id: currentUser.id,
+      });
+      await createNewRecord(userManager.getUserTransaction(chatId));
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgIAAxkBAAIEd2eY7ZpLKIwF2P1qz0kzamW4FhIqAAL-AANWnb0K2gRhMC751_82BA"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendTextMessage(chatId, botReplies[27], []);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendMenu(chatId);
+      userManager.setUserStatus(chatId, "initial");
+      userManager.setUserTransaction(chatId, {});
+      return;
     default:
       console.log(query.data);
+      if (query.data.startsWith("category-selection-option")) {
+        userManager.setUserTransaction(chatId, {
+          ...userManager.getUserTransaction(chatId),
+          category: query.data.split(":")[1],
+        });
+        const { type, details, ammount, category } =
+          userManager.getUserTransaction(chatId);
+        confirmationMessage = botReplies[26]
+          .replace("$type", type)
+          .replace("$details", details)
+          .replace(
+            "$ammount",
+            `${await numberFormater(ammount, currentUser.currency)}`
+          )
+          .replace("$category", category);
+        userManager.setUserStatus(chatId, "waiting_for_confirmation");
+        inline_keyboard = [
+          [{ text: "Confirmar", callback_data: "confirm_transaction" }],
+          [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+        ];
+        await messageSender.editTextMessage(
+          chatId,
+          confirmationMessage,
+          inline_keyboard,
+          messageId
+        );
+      }
       break;
   }
 }
-
 /**
  * import {
   createNewRecord,

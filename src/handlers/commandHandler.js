@@ -65,8 +65,9 @@ export default async function commandHandler(
         await messageSender.sendMenu(chatId)
       }
 
-      break;
-
+      return;
+      case "menu":
+        messageSender.sendMenu(chatId)
     default:
       break;
   }

@@ -1,5 +1,6 @@
 import {
   fetchCurrentUser,
+  fetchUserCategories,
   insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { botErrorMessages } from "../messages/botErrorMessages.js";
@@ -19,6 +20,8 @@ export default async function handleUserMessages(
   let inline_keyboard = [];
   let newTextMessage = "";
   let chatId = msg.from.id;
+  let inputText = null;
+  let inputNumber = null;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   let validatedText = null;
@@ -28,7 +31,10 @@ export default async function handleUserMessages(
   switch (currentUserStatus) {
     case "waiting-for-new-user-name":
       newTextMessage = botReplies[3].replace("$username", msg.text);
-      await userManager.setNewUser(chatId, {...userManager.getNewUser(chatId), first_name: msg.text })
+      await userManager.setNewUser(chatId, {
+        ...userManager.getNewUser(chatId),
+        first_name: msg.text,
+      });
       await messageSender.sendTextMessage(chatId, newTextMessage, []);
       await new Promise((resolve) => setTimeout(resolve, 200));
       await messageSender.sendTextMessage(chatId, botReplies[4], []);
@@ -62,11 +68,17 @@ export default async function handleUserMessages(
         currency: msg.text,
       });
       newTextMessage = botReplies[7]
-      .replace("$first_name", userManager.getNewUser(chatId).first_name || "")
-      .replace("$user_lastname", userManager.getNewUser(chatId).last_name || "")
-      .replace("$username", `@${userManager.getNewUser(chatId).telegram_username}`)
-      .replace("$email", userManager.getNewUser(chatId).email || "")
-      .replace("$currency", userManager.getNewUser(chatId).currency || "");
+        .replace("$first_name", userManager.getNewUser(chatId).first_name || "")
+        .replace(
+          "$user_lastname",
+          userManager.getNewUser(chatId).last_name || ""
+        )
+        .replace(
+          "$username",
+          `@${userManager.getNewUser(chatId).telegram_username}`
+        )
+        .replace("$email", userManager.getNewUser(chatId).email || "")
+        .replace("$currency", userManager.getNewUser(chatId).currency || "");
       inline_keyboard = [
         [
           { text: "Confirmar", callback_data: "confirm_new_profile_btn" },
@@ -213,6 +225,55 @@ export default async function handleUserMessages(
         ],
       ];
       messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_transaction_name":
+      inputText = await validateText(msg.text);
+      if (!inputText.success) {
+        await messageSender.sendTextMessage(chatId, inputText.error, []);
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        details: msg.text,
+      });
+      userManager.setUserStatus(chatId, "waiting_for_transaction_amount");
+      messageSender.sendTextMessage(chatId, botReplies[24], [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ]);
+      return;
+    case "waiting_for_transaction_amount":
+      inputNumber = await validateIsNumber(msg.text);
+      if (!inputNumber.success) {
+        await messageSender.sendTextMessage(chatId, inputNumber.error, []);
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        ammount: inputNumber.ammount,
+      });
+      let userCategories = [];
+      let transactionType = userManager.getUserTransaction(chatId).type;
+      userCategories = await fetchUserCategories(chatId, transactionType);
+      let inline_keyboard = [];
+      let tempRow = [];
+
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: `category-selection-option:${category.name}`,
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      messageSender.sendTextMessage(chatId, botReplies[25], inline_keyboard);
       return;
     default:
       break;
