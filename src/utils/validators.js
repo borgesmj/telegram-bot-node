@@ -1,4 +1,5 @@
-import { botReplies } from "../messages/botReplies.js";
+import { botErrorMessages, } from "../messages/botErrorMessages.js";
+import { botReplies } from "../messages/botMessages.js";
 
 export async function validateEmail(email) {
   if (email.length > 50) {
@@ -9,7 +10,7 @@ export async function validateEmail(email) {
   }
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!regex.test(email)) {
-    return { success: false, error: botReplies[7] };
+    return { success: false, error: botErrorMessages[0] };
   } else {
     return { success: true, error: "" };
   }
@@ -40,7 +41,7 @@ export async function validateIsNumber(text) {
     userInput = text;
   }
   if (!regex.test(userInput)) {
-    return { success: false, error: botReplies[15], ammount: "" };
+    return { success: false, error: "🤖\n\nDisculpa, el monto debe ser un texto solamente con números", ammount: "" };
   } else {
     return { success: true, error: "", ammount: Number(userInput) };
   }

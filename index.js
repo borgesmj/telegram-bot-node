@@ -1,121 +1,51 @@
-//* importamos dotenv para extraer la variable de entorno
+import express from "express";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import indexRoutes from "./src/routes/index.js";
 import dotenv from "dotenv";
-dotenv.config();
-// * importando las funciones de manejadores y respuetas
-import commandHandler from "./src/handlers/commandHandler.js";
-// * importamos Telegram-bot-api para utilizar la API de Telegram
 import TelegramBotAPI from "node-telegram-bot-api";
-import {
-  changeName,
-  handleUserMessages,
-} from "./src/handlers/MessagesHandler.js";
-import messageSender from "./src/senders/messageSender.js";
-//import { botReplies } from "./src/messages/replies.js";
-import {
-  createNewUser,
-  fetchCurrentUser,
-} from "./src/database/databaseHandlers.js";
-import { handleUserQueries } from "./src/handlers/queryHandler.js";
-//import signInUser from "./src/handlers/signInUser.js";
-
-// * Generamos una constante con el token del bot
-const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-
-// * Inicializamos el bot
-const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
-
-/**
- * * Utilizamos dos eventos de la API de Telegram
- * @function onText que maneja los comandos con un regex
- * @function on que maneja los mensajes que no sean comandos ignorando los mensajes que comiencen con /
- */
-
-const userStates = {};
-const STATES = {
-  INITIAL: "initial",
-  WAITING_FOR_NEW_FIRST_NAME: "waiting_for_new_first_name",
-  WAITING_FOR_EMAIL: "waiting_for_email",
-  WAITING_FOR_USER_CURRENCY: "waiting_for_user_currency",
-  WAITING_FOR_USER_INCOME_CATEGORIES: "waiting_for_user_income_categories",
-  WAITING_FOR_USER_WITHDRAW_CATEGORIES: "waiting_for_user_withdraw_categories",
-  WAITING_FOR_INITIAL_BALANCE: "waiting_for_initial_balance",
-  WAITING_FOR_INITIAL_SAVINGS: "waiting_for_initial_savings",
-  WAITING_FOR_EDIT_PROFILE: "waiting_for_edit_profile",
-  WAITING_FOR_TRANSACTION_NAME: "waiting_for_transaction_name",
-  WAITING_FOR_TRANSACTION_AMOUNT: "waiting_for_transaction_amount",
-  WAITING_FOR_NEW_SAVINGS: "waiting_for_new_savings",
-  WAITING_FOR_TYPE: "waiting_for_type",
-  WAITING_FOR_CONFIRMATION: "waiting_for_confirmation",
-  WAITING_FOR_NEW_CATEGORY: "waiting_for_new_category",
-  WAITING_FOR_CATEGORY_EDIT: "waiting_for_category_edit",
-  COMPLETED: "completed",
-};
-
-let newUserProfile = {};
-let currentUser = {};
-let newTransactionCategory = {};
-let newUserRecord = {};
-let editProfileObject = {};
-let newUserCategory = {};
-let editCategoryObject = {};
-bot.onText(/\/(\w+)/, async (msg, match) => {
-  try {
-    currentUser = await fetchCurrentUser(msg.from.id);
-  } catch (error) {
-    console.log("error haciendo fetch de current user desde index.js: ", error);
-  }
-  const command = match[1];
-  await commandHandler(
-    command,
-    bot,
-    msg,
-    newUserProfile,
-    userStates,
-    STATES,
-    currentUser,
-    newTransactionCategory,
-    newUserRecord,
-    newUserCategory
-  );
+import commandHandler from "./src/handlers/commandHandler.js";
+import handleUserMessages from "./src/handlers/MessagesHandler.js";
+import handleUserQueries from "./src/handlers/queryHandler.js";
+import Users from "./src/users/UserManager.class.js";
+import MessageSender from "./src/senders/MessageSender.class.js";
+// Express
+const app = express();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+app.set("views", join(__dirname, "src/views"));
+app.set("view engine", "ejs");
+app.use(express.static(join(__dirname, "src/public")));
+app.use(indexRoutes);
+const port = parseInt(process.env.PORT) || process.argv[3] || 3000;
+app.listen(port, () => {
+  console.log(`Listening on http://localhost:${port}`);
 });
 
+// telegram bot
+dotenv.config();
+const userManager = new Users();
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
+const messageSender = new MessageSender(bot);
+let currentUser = {};
+// Filtrado de mensajes normales
+//userManager.setUserStatus(896160399, "waiting_for_initial_savings")
 bot.on("message", async (msg) => {
-  try {
-    currentUser = await fetchCurrentUser(msg.from.id);
-  } catch (error) {
-    console.log("error haciendo fetch de current user desde index.js: ", error);
-  }
-  // ! Si el mensaje es un comando, lo ignoramos aquí
   if (msg.text && msg.text.startsWith("/")) {
     return;
   }
-  await handleUserMessages(
-    bot,
-    msg,
-    newUserProfile,
-    userStates,
-    STATES,
-    currentUser,
-    newTransactionCategory,
-    newUserRecord,
-    editProfileObject,
-    newUserCategory,
-    editCategoryObject
-  );
+  await handleUserMessages(msg, userManager, currentUser, messageSender);
 });
-
+// filtrado de comandos
+bot.onText(/\/(\w+)/, async (msg, match) => {
+  const command = match[1];
+  await commandHandler(command, userManager, msg, currentUser, messageSender);
+});
+// filtrado de querys
 bot.on("callback_query", async (query) => {
-  currentUser = await fetchCurrentUser(query.message.chat.id);
-  handleUserQueries(
-    query,
-    bot,
-    userStates,
-    editProfileObject,
-    STATES,
-    newUserRecord,
-    currentUser,
-    newUserCategory,
-    editCategoryObject
-  );
+  await handleUserQueries(query, userManager, currentUser, messageSender);
 });
-bot.on("polling_error", (msg) => console.log(msg));
+// errores
+bot.on("polling_error", (err) => {
+  console.log(err);
+});

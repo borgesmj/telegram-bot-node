@@ -1,56 +1,706 @@
 import {
   createNewRecord,
   createNewSaving,
+  createNewUser,
   fetchAllUserCategories,
   fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchInitialBalance,
-  fetchTransactionById,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
-  fetchUserCategories,
-  insertNewTransactionCategory,
-  updateUserCategory,
 } from "../database/databaseHandlers.js";
-import { decryptText } from "../helpers/encryptText.js";
-import { botReplies } from "../messages/botReplies.js";
-import sendMenu from "../senders/menuSender.js";
-import messageSender from "../senders/messageSender.js";
-import {
-  optionsEdit,
-  optionsSend,
-  sendConfirmation,
-} from "../senders/optionsSender.js";
-import sendSticker from "../senders/stickerSender.js";
-import capitalizeWords from "../utils/capitalizeWords.js";
+import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
-import getMonthString from "../utils/getMonth.js";
 import numberFormater from "../utils/numberFormater.js";
+import getMonthString from "../utils/getMonth.js";
+import { decryptText } from "../helpers/encryptText.js";
 
-export async function handleUserQueries(
+export default async function handleUserQueries(
   query,
-  bot,
-  userStates,
-  editProfileObject,
-  STATES,
-  newUserRecord,
+  userManager,
   currentUser,
-  newUserCategory,
-  editCategoryObject
+  messageSender
 ) {
   let inline_keyboard = [];
-  let chatId = query.message.chat.id;
+  let newTextMessage = "";
   let messageId = query.message.message_id;
+  let chatId = query.message.chat.id;
   let confirmationMessage = "";
-  let textMesssage = "";
-  let selectedMonth = 0;
+  let confirmTransaction = null;
   let tempRow = [];
-  let userCategories = [];
   let recordListPage = 0;
   let transactionsList = [];
-  //const currentUser = await fetchCurrentUser(query.message.chat.id);
+  let selectedMonth = 0;
+  let totalSavings = 0;
+  let tempAmmount = 0;
+  userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
+  currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
+    case "edit-first-name-btn":
+      newTextMessage = botReplies[2];
+      inline_keyboard = [
+        [
+          {
+            text: "Mejor dejarlo asi",
+            callback_data: "not-edit-first-name-btn",
+          },
+        ],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting-for-new-user-name");
+      return;
+    case "not-edit-first-name-btn":
+      newTextMessage = botReplies[8].replace(
+        "$username",
+        userManager.getNewUser(chatId).first_name
+      );
+      await messageSender.sendTextMessage(chatId, newTextMessage, []);
+      await userManager.setUserStatus(chatId, "waiting-for-new-email");
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[4], []);
+      return;
+    case "confirm_new_profile_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const newProfile = await createNewUser(
+        chatId,
+        userManager.getNewUser(chatId)
+      );
+      if (!newProfile.success) {
+        await messageSender.sendTextMessage(chatId, newProfile.error, []);
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await messageSender.sendTextMessage(chatId, botReplies[9], []);
+      await userManager.setUserStatus(
+        chatId,
+        "waiting_for_new_income_categories"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendTextMessage(chatId, botReplies[11], []);
+      return;
+    case "start_over_new_profile_btn":
+      await userManager.setUserStatus(chatId, "waiting-for-new-user-name");
+      await messageSender.sendTextMessage(chatId, botReplies[22], []);
+      return;
+    case "set_expenses_categories_btn":
+      await messageSender.sendTextMessage(chatId, botReplies[13], []);
+      await userManager.setUserStatus(
+        chatId,
+        "waiting_for_expenses_categories"
+      );
+      return;
+    case "end_categories_configuration_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_balance");
+      await messageSender.sendTextMessage(chatId, botReplies[14], []);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendTextMessage(chatId, botReplies[15], []);
+      return;
+    case "reset_new_initial_balance_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_balance");
+      await messageSender.sendTextMessage(chatId, botReplies[19], []);
+      return;
+    case "confirm_initial_balance_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const newInitialBalance = userManager.getUserAmmount(chatId);
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        ammount: newInitialBalance,
+        created_at: adjustToLocalTime(new Date()),
+      });
+
+      const setInitialBalance = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!setInitialBalance.success) {
+        await messageSender(msg.from.id, setInitialBalance.error, bot);
+        return;
+      }
+      await userManager.setUserTransaction(chatId, {});
+      userManager.setUserStatus(chatId, "waiting_for_initial_savings");
+      await messageSender.sendTextMessage(chatId, botReplies[16], []);
+      return;
+    case "reset_new_initial_savings_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_savings");
+      await messageSender.sendTextMessage(chatId, botReplies[21], []);
+      return;
+    case "confirm_initial_savings_btn":
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: await adjustToLocalTime(new Date()),
+      });
+      const { ammount, created_at, user_id } =
+        userManager.getUserTransaction(chatId);
+      const setInitialSavings = await createNewSaving({
+        created_at: created_at,
+        ammount: ammount,
+        user_id: user_id,
+      });
+      if (!setInitialSavings.success) {
+        await messageSender(msg.from.id, setInitialSavings.error, bot);
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[17], []);
+      await userManager.setUserStatus(chatId, "initial");
+      await userManager.setUserTransaction(chatId, {});
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId);
+      return;
+    case "new_income":
+      userManager.setUserTransaction(chatId, { type: "INGRESO" });
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[23],
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting_for_transaction_name");
+      return;
+    case "confirm_transaction":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: adjustToLocalTime(new Date()),
+        user_id: currentUser.id,
+      });
+      confirmTransaction = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgIAAxkBAAIEd2eY7ZpLKIwF2P1qz0kzamW4FhIqAAL-AANWnb0K2gRhMC751_82BA"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendTextMessage(chatId, botReplies[27], []);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendMenu(chatId);
+      userManager.setUserStatus(chatId, "initial");
+      userManager.setUserTransaction(chatId, {});
+      return;
+    case "new_withdraw":
+      userManager.setUserTransaction(chatId, { type: "EGRESO" });
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[28],
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting_for_transaction_name");
+      return;
+    case "new_savings":
+      userManager.setUserTransaction(chatId, {
+        type: "AHORROS",
+        details: "Nuevos ahorros",
+        category: "AHORROS",
+      });
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await userManager.setUserStatus(chatId, "waiting_for_new_savings");
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[29],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "confirm_new_savings_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: adjustToLocalTime(new Date()),
+        user_id: currentUser.id,
+      });
+      confirmTransaction = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      confirmTransaction = await createNewSaving({
+        ammount: userManager.getUserTransaction(chatId).ammount,
+        created_at: userManager.getUserTransaction(chatId).created_at,
+        user_id: currentUser.id,
+      });
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
+      );
+      await messageSender.sendTextMessage(chatId, botReplies[31], []);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId);
+      userManager.setUserStatus(chatId, "initial");
+      userManager.setUserTransaction(chatId, {});
+      return;
+    case "see_records_list":
+      inline_keyboard = [];
+      tempRow = [];
+      recordListPage = 1;
+      transactionsList = await fetchTransactionsList(
+        currentUser.id,
+        recordListPage
+      );
+      newTextMessage = "";
+      newTextMessage += "💸 *Tus últimos movimientos*:\n\n";
+      const messages = await Promise.all(
+        transactionsList.map(async (transaction, index) => {
+          return `${index + 1}) ${
+            transaction.record_type === "INGRESO"
+              ? "🟢"
+              : transaction.record_type === "EGRESO"
+              ? "🔴"
+              : "🔵"
+          } *${transaction.detalles}* - ${await numberFormater(
+            transaction.monto,
+            currentUser.currency
+          )}\n`;
+        })
+      );
+      transactionsList.forEach((transaction, index) => {
+        tempRow.push({
+          text: `${index + 1}`,
+          callback_data: `details-transaction:${transaction.id}`,
+        });
+        if (tempRow.length === 5 || index === transactionsList.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      newTextMessage = `💸 *Tus últimos movimientos*:\n\n${messages.join("")}`;
+      /**
+       * 
+      inline_keyboard.push([
+        {
+          text: "⬅",
+          callback_data: "previous_page_btn",
+        },
+        {
+          text: "➡",
+          callback_data: "next_page_btn",
+        },
+      ]);
+      */
+      inline_keyboard.push([
+        {
+          text: "Regresar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+
+      return;
+    case "back_to_menu_btn":
+      await messageSender.editMessageToMenu(chatId, messageId);
+      return;
+    case "see_balances":
+      inline_keyboard = [
+        [
+          {
+            text: "📅 Mes Actual",
+            callback_data: "see_balance_current_month_btn",
+          },
+        ],
+        [{ text: "📅 Otro mes", callback_data: "see_another_month_btn" }],
+        [
+          {
+            text: "📊 Historial completo",
+            callback_data: "see_balance_history_btn",
+          },
+        ],
+        [{ text: "💰 Ver ahorros", callback_data: "see_total_savings_btn" }],
+        [{ text: "❌ Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      messageSender.editTextMessage(
+        chatId,
+        "Elige una opcion:",
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_balance_current_month_btn":
+      const today = new Date();
+      selectedMonth = today.getMonth() + 1;
+      const incomeBalanceCurrentMonth = await fetchBalanceByMonth(
+        chatId,
+        selectedMonth,
+        "INGRESO"
+      );
+      const expensesBalanceCurrentMonth = await fetchBalanceByMonth(
+        chatId,
+        selectedMonth,
+        "EGRESO"
+      );
+      const savingsBalanceCurrentMonth = await fetchBalanceByMonth(
+        chatId,
+        selectedMonth,
+        "AHORROS"
+      );
+      const generalBalanceCurrentMonth =
+        incomeBalanceCurrentMonth -
+        expensesBalanceCurrentMonth -
+        savingsBalanceCurrentMonth;
+      newTextMessage = botReplies[32]
+        .replace(
+          "$income",
+          await numberFormater(incomeBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace(
+          "$expenses",
+          await numberFormater(
+            expensesBalanceCurrentMonth,
+            currentUser.currency
+          )
+        )
+        .replace(
+          "$savings",
+          await numberFormater(savingsBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace(
+          "$balance",
+          await numberFormater(generalBalanceCurrentMonth, currentUser.currency)
+        )
+        .replace("$month", "mes actual");
+      inline_keyboard = [
+        [
+          {
+            text: "Regresar",
+            callback_data: "see_balances",
+          },
+        ],
+        [
+          {
+            text: "Ver detalles",
+            callback_data: "see_balance_details-btn",
+          },
+        ],
+      ];
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_another_month_btn":
+      inline_keyboard = [
+        [
+          {
+            text: "Enero",
+            callback_data: "balance-month-1",
+          },
+          {
+            text: "Febrero",
+            callback_data: "balance-month-2",
+          },
+        ],
+        [
+          {
+            text: "Marzo",
+            callback_data: "balance-month-3",
+          },
+          {
+            text: "Abril",
+            callback_data: "balance-month-4",
+          },
+        ],
+        [
+          {
+            text: "Mayo",
+            callback_data: "balance-month-5",
+          },
+          {
+            text: "Junio",
+            callback_data: "balance-month-6",
+          },
+        ],
+        [
+          {
+            text: "Julio",
+            callback_data: "balance-month-7",
+          },
+          {
+            text: "Agosto",
+            callback_data: "balance-month-8",
+          },
+        ],
+        [
+          {
+            text: "Septiembre",
+            callback_data: "balance-month-9",
+          },
+          {
+            text: "Octubre",
+            callback_data: "balance-month-10",
+          },
+        ],
+        [
+          {
+            text: "Noviembre",
+            callback_data: "balance-month-11",
+          },
+          { text: "Diciembre", callback_data: "balance-month-12" },
+        ],
+        [{ text: "Regresar", callback_data: "see_balances" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        "Elige el mes",
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_balance_history_btn":
+      const incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      const expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      const savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      const generalBalance = incomeBalance - expenseBalance - savingsBalance;
+      newTextMessage = botReplies[34]
+        .replace(
+          "$income",
+          await numberFormater(incomeBalance, currentUser.currency)
+        )
+        .replace(
+          "$expenses",
+          await numberFormater(expenseBalance, currentUser.currency)
+        )
+        .replace(
+          "$savings",
+          await numberFormater(savingsBalance, currentUser.currency)
+        )
+        .replace(
+          "$balance",
+          await numberFormater(generalBalance, currentUser.currency)
+        );
+      inline_keyboard = [[{ text: "Regresar", callback_data: "see_balances" }]];
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_total_savings_btn":
+      totalSavings = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      newTextMessage = botReplies[35].replace(
+        "$ammount",
+        await numberFormater(totalSavings, currentUser.currency)
+      );
+      inline_keyboard = [
+        [
+          {
+            text: "Realizar un retiro de los ahorros",
+            callback_data: "savings_withdraw_btn",
+          },
+        ],
+        [{ text: "Regresar", callback_data: "see_balances" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "see_balance_details-btn":
+      newTextMessage = "";
+      await messageSender.editTextMessage(
+        chatId,
+        "🤖\n\nDame un momento, estoy cargando la informacion....",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      newTextMessage += `*Detalles de las transacciones en el mes de ${await getMonthString(
+        String(selectedMonth + 1)
+      )}*\n\n`;
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "INGRESO"
+      );
+      let userAmmounts = {
+        totalIncomes: tempAmmount,
+      };
+      newTextMessage += botReplies[36].replace(
+        "$ammount",
+        await numberFormater(tempAmmount, currentUser.currency)
+      );
+      tempAmmount = 0;
+      newTextMessage += "\n";
+      let initialBalance = await fetchInitialBalance(
+        currentUser.id,
+        selectedMonth + 1
+      );
+      if (initialBalance > 0) {
+        newTextMessage += botReplies[37]
+          .replace("$category", "Balance Inicial")
+          .replace(
+            "$ammount",
+            await numberFormater(initialBalance, currentUser.currency)
+          );
+      }
+      newTextMessage += "\n";
+      const incomeCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "INGRESO"
+      );
+      const expenseCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "EGRESO"
+      );
+      const incomeDetails = await Promise.all(
+        incomeCategories.map(async (category) => {
+          tempAmmount = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let tempMessage = botReplies[37]
+            .replace("$category", category.name)
+            .replace(
+              "$ammount",
+              await numberFormater(tempAmmount, currentUser.currency)
+            );
+          return tempMessage;
+        })
+      );
+      newTextMessage += incomeDetails.join("\n");
+      await messageSender.editTextMessage(
+        chatId,
+        "🤖\n\nSigo trabajando para extraer tu información....",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      newTextMessage += "\n\n";
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "EGRESO"
+      );
+      userAmmounts.expenses = tempAmmount;
+      newTextMessage += botReplies[38].replace(
+        "$ammount",
+        await numberFormater(tempAmmount, currentUser.currency)
+      );
+      tempAmmount = 0;
+      newTextMessage += "\n";
+      const expensesDetails = await Promise.all(
+        expenseCategories.map(async (category) => {
+          tempAmmount = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let tempMessage = botReplies[37]
+            .replace("$category", category.name)
+            .replace(
+              "$ammount",
+              await numberFormater(tempAmmount, currentUser.currency)
+            );
+          return tempMessage;
+        })
+      );
+      newTextMessage += expensesDetails.join("\n");
+      newTextMessage += "\n\n";
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "AHORROS"
+      );
+      userAmmounts.savings = tempAmmount;
+      newTextMessage += "\n\n";
+      newTextMessage += botReplies[40].replace(
+        "$ammount",
+        await numberFormater(
+          userAmmounts.totalIncomes -
+            userAmmounts.expenses -
+            userAmmounts.savings,
+          currentUser.currency
+        )
+      );
+      const percent = ((tempAmmount / userAmmounts.totalIncomes) * 100).toFixed(
+        2
+      );
+      newTextMessage += botReplies[39]
+        .replace(
+          "$ammount",
+          await numberFormater(tempAmmount, currentUser.currency)
+        )
+        .replace("$percent", percent);
+      if (percent >= 15) {
+        newTextMessage += botReplies[41];
+      } else if (percent > 7 && percent < 15) {
+        newTextMessage += botReplies[42];
+      } else if (percent <= 7 && percent > 1) {
+        newTextMessage += botReplies[43];
+      } else {
+        newTextMessage += botReplies[44];
+      }
+      inline_keyboard = [
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
     case "my_profile":
       const { first_name, last_name, email, telegram_username, currency } =
         currentUser;
@@ -74,49 +724,127 @@ export async function handleUserQueries(
         dec_email: decryptText(email),
         dec_telegram_username: decryptText(telegram_username),
       };
+      console.log(decriptedProfile);
       const {
         dec_first_name,
         dec_last_name,
         dec_email,
         dec_telegram_username,
       } = decriptedProfile;
-      optionsEdit(
-        botReplies[18]
-          .replace(
-            "$userFirstName",
-            (await capitalizeWords(dec_first_name)) || ""
-          )
-          .replace(
-            "$userLastName",
-            (await capitalizeWords(dec_last_name)) || ""
-          )
-          .replace("$userEmail ", dec_email || "")
-          .replace("$username", `@${dec_telegram_username}` || "")
-          .replace("$userCurrency", currency || ""),
-        chatId,
-        bot,
-        inline_keyboard,
-        messageId
-      );
+      newTextMessage = botReplies[45]
+        .replace("$userFirstName", dec_first_name || "")
+        .replace("$userLastName", dec_last_name || "")
+        .replace("$userEmail", dec_email)
+        .replace("$username", dec_telegram_username)
+        .replace("$userCurrency", currentUser.currency);
+        messageSender.editTextMessage(chatId, newTextMessage, inline_keyboard, messageId)
       return;
-    case "back_to_menu_btn":
-      (inline_keyboard = [
-        [{ text: "💰 Nuevo Ingreso", callback_data: "new_income" }],
-        [{ text: "💸 Nuevo Retiro", callback_data: "new_withdraw" }],
-        [{ text: "💵 Nuevo Ahorro", callback_data: "new_savings" }],
-        [{ text: "📋 Ver movimientos", callback_data: "see_records_list" }],
-        [{ text: "📊 Ver saldos", callback_data: "see_balances" }],
-        [{ text: "👤 Mi Perfil", callback_data: "my_profile" }],
-        [{ text: "ℹ️ Info de este bot", callback_data: "about_bot" }],
-      ]),
-        await optionsEdit(
-          "*Menu Principal* 📋",
+    default:
+      console.log(query.data);
+      if (query.data.startsWith("category-selection-option")) {
+        userManager.setUserTransaction(chatId, {
+          ...userManager.getUserTransaction(chatId),
+          category: query.data.split(":")[1],
+        });
+        const { type, details, ammount, category } =
+          userManager.getUserTransaction(chatId);
+        confirmationMessage = botReplies[26]
+          .replace("$type", type)
+          .replace("$details", details)
+          .replace(
+            "$ammount",
+            `${await numberFormater(ammount, currentUser.currency)}`
+          )
+          .replace("$category", category);
+        userManager.setUserStatus(chatId, "waiting_for_confirmation");
+        inline_keyboard = [
+          [{ text: "Confirmar", callback_data: "confirm_transaction" }],
+          [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+        ];
+        await messageSender.editTextMessage(
           chatId,
-          bot,
+          confirmationMessage,
           inline_keyboard,
           messageId
         );
+      } else if (query.data.startsWith("balance-month-")) {
+        selectedMonth = query.data.split("-")[2];
+        const incomeBalanceByMonth = await fetchBalanceByMonth(
+          chatId,
+          selectedMonth,
+          "INGRESO"
+        );
+        const expensesBalanceByMonth = await fetchBalanceByMonth(
+          chatId,
+          selectedMonth,
+          "EGRESO"
+        );
+        const savingsBalanceByMonth = await fetchBalanceByMonth(
+          chatId,
+          selectedMonth,
+          "AHORROS"
+        );
+        const generalBalanceByMonth =
+          incomeBalanceByMonth - expensesBalanceByMonth - savingsBalanceByMonth;
+        if (
+          incomeBalanceByMonth === 0 &&
+          expensesBalanceByMonth === 0 &&
+          savingsBalanceByMonth === 0
+        ) {
+          newTextMessage = botReplies[33]
+            .replace("$month", ` de ${await getMonthString(selectedMonth)}`)
+            .replace("$currentYear", new Date().getFullYear());
+          inline_keyboard = [
+            [{ text: "Regresar", callback_data: "see_balances" }],
+          ];
+          messageSender.editTextMessage(
+            chatId,
+            newTextMessage,
+            inline_keyboard,
+            messageId
+          );
+        } else {
+          newTextMessage = botReplies[32]
+            .replace("$month", ` de ${await getMonthString(selectedMonth)}`)
+            .replace(
+              "$income",
+              await numberFormater(incomeBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$expenses",
+              await numberFormater(expensesBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$savings",
+              await numberFormater(savingsBalanceByMonth, currentUser.currency)
+            )
+            .replace(
+              "$balance",
+              await numberFormater(generalBalanceByMonth, currentUser.currency)
+            );
+          inline_keyboard = [
+            [{ text: "Regresar", callback_data: "see_balances" }],
+            [
+              {
+                text: "Ver detalles",
+                callback_data: "see_balance_details-btn",
+              },
+            ],
+          ];
+          messageSender.editTextMessage(
+            chatId,
+            newTextMessage,
+            inline_keyboard,
+            messageId
+          );
+        }
+        /**
+         */
+      }
       return;
+  }
+}
+/**
     case "edit_profile":
       inline_keyboard = [
         [
@@ -213,303 +941,6 @@ export async function handleUserQueries(
             },
           ],
         ],
-        messageId
-      );
-      return;
-    case "new_income":
-      newUserRecord.type = "INGRESO";
-      await optionsEdit(
-        botReplies[22],
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_TRANSACTION_NAME,
-      };
-      return;
-    case "new_withdraw":
-      newUserRecord.type = "EGRESO";
-      await optionsEdit(
-        botReplies[24],
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_TRANSACTION_NAME,
-      };
-      return;
-    case "confirm_transaction":
-      if (userStates[query.message.chat.id] !== "waiting_for_confirmation") {
-        return;
-      }
-      const sendNewTransaction = await createNewRecord(newUserRecord);
-      if (!sendNewTransaction.success) {
-        await messageSender(
-          query.message.chat.id,
-          sendNewTransaction.error,
-          bot
-        );
-        return;
-      }
-      newUserRecord = {};
-      await sendSticker(
-        bot,
-        query.message.chat.id,
-        "CAACAgIAAxkBAAIKrGeRBX-8sa-q0WyXSKJDdRKDRiIGAAL-AANWnb0K2gRhMC751_82BA"
-      );
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await messageSender(query.message.chat.id, "Transaccion guardadda", bot);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await sendMenu(query.message.chat.id, bot);
-      userStates[query.message.chat.id] = { state: STATES.COMPLETED };
-      break;
-    case "new_savings":
-      newUserRecord.type = "AHORROS";
-      newUserRecord.details = "Nuevos ahorros";
-      newUserRecord.user_id = currentUser.id;
-      newUserRecord.category = "AHORROS";
-      inline_keyboard = [
-        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_NEW_SAVINGS,
-      };
-      await optionsEdit(
-        botReplies[27],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "confirm_new_savings_btn":
-      if (userStates[query.message.chat.id] !== "waiting_for_confirmation") {
-        return;
-      }
-      const saveNewSavingTable = await createNewSaving(newUserRecord);
-      const saveNewSavingsRecord = await createNewRecord(newUserRecord);
-      if (!saveNewSavingTable.success || !saveNewSavingsRecord.success) {
-        await messageSender(
-          query.message.chat.id,
-          saveNewSavingTable.error,
-          bot
-        );
-        return;
-      }
-      newUserRecord = {};
-      await sendSticker(
-        bot,
-        query.message.chat.id,
-        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
-      );
-      await messageSender(query.message.chat.id, botReplies[28], bot);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await sendMenu(query.message.chat.id, bot);
-      userStates[query.message.chat.id] = { state: STATES.COMPLETED };
-      return;
-    case "see_balances":
-      inline_keyboard = [
-        [
-          {
-            text: "📅 Mes Actual",
-            callback_data: "see_balance_current_month_btn",
-          },
-        ],
-        [{ text: "📅 Otro mes", callback_data: "see_another_month_btn" }],
-        [
-          {
-            text: "📊 Historial completo",
-            callback_data: "see_balance_history_btn",
-          },
-        ],
-        [{ text: "❌ Cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      optionsEdit(
-        "Elige una opcion",
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "see_balance_history_btn":
-      const incomeBalance = await fetchTransactionsAndBalance(
-        currentUser.id,
-        "INGRESO"
-      );
-      const expenseBalance = await fetchTransactionsAndBalance(
-        currentUser.id,
-        "EGRESO"
-      );
-      const savingsBalance = await fetchTransactionsAndBalance(
-        currentUser.id,
-        "AHORROS"
-      );
-      const generalBalance = incomeBalance - expenseBalance - savingsBalance;
-      textMesssage = botReplies[30]
-        .replace(
-          "$income",
-          await numberFormater(incomeBalance, currentUser.currency)
-        )
-        .replace(
-          "$expenses",
-          await numberFormater(expenseBalance, currentUser.currency)
-        )
-        .replace(
-          "$savings",
-          await numberFormater(savingsBalance, currentUser.currency)
-        )
-        .replace(
-          "$balance",
-          await numberFormater(generalBalance, currentUser.currency)
-        );
-      inline_keyboard = [
-        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-      ];
-      await optionsEdit(
-        textMesssage,
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "see_balance_current_month_btn":
-      const today = new Date();
-      selectedMonth = today.getMonth() + 1;
-      const incomeBalanceCurrentMonth = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth,
-        "INGRESO"
-      );
-      const expensesBalanceCurrentMonth = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth,
-        "EGRESO"
-      );
-      const savingsBalanceCurrentMonth = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth,
-        "AHORROS"
-      );
-      const generalBalanceCurrentMonth =
-        incomeBalanceCurrentMonth -
-        expensesBalanceCurrentMonth -
-        savingsBalanceCurrentMonth;
-      textMesssage = botReplies[31]
-        .replace(
-          "$income",
-          await numberFormater(incomeBalanceCurrentMonth, currentUser.currency)
-        )
-        .replace(
-          "$expenses",
-          await numberFormater(
-            expensesBalanceCurrentMonth,
-            currentUser.currency
-          )
-        )
-        .replace(
-          "$savings",
-          await numberFormater(savingsBalanceCurrentMonth, currentUser.currency)
-        )
-        .replace(
-          "$balance",
-          await numberFormater(generalBalanceCurrentMonth, currentUser.currency)
-        );
-      inline_keyboard = [
-        [
-          {
-            text: "Regresar",
-            callback_data: "back_to_menu_btn",
-          },
-        ],
-        [
-          {
-            text: "Ver detalles",
-            callback_data: "see_balance_details-btn",
-          },
-        ],
-      ];
-      await optionsEdit(
-        textMesssage,
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "see_another_month_btn":
-      inline_keyboard = [
-        [
-          {
-            text: "Enero",
-            callback_data: "balance-month-1",
-          },
-          {
-            text: "Febrero",
-            callback_data: "balance-month-2",
-          },
-        ],
-        [
-          {
-            text: "Marzo",
-            callback_data: "balance-month-3",
-          },
-          {
-            text: "Abril",
-            callback_data: "balance-month-4",
-          },
-        ],
-        [
-          {
-            text: "Mayo",
-            callback_data: "balance-month-5",
-          },
-          {
-            text: "Junio",
-            callback_data: "balance-month-6",
-          },
-        ],
-        [
-          {
-            text: "Julio",
-            callback_data: "balance-month-7",
-          },
-          {
-            text: "Agosto",
-            callback_data: "balance-month-8",
-          },
-        ],
-        [
-          {
-            text: "Septiembre",
-            callback_data: "balance-month-9",
-          },
-          {
-            text: "Octubre",
-            callback_data: "balance-month-10",
-          },
-        ],
-        [
-          {
-            text: "Noviembre",
-            callback_data: "balance-month-11",
-          },
-          { text: "Diciembre", callback_data: "balance-month-12" },
-        ],
-        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-      ];
-      await optionsEdit(
-        "Elige el mes",
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
         messageId
       );
       return;
@@ -697,256 +1128,6 @@ export async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 200));
       await sendMenu(query.message.chat.id, bot);
       return;
-    case "see_records_list":
-      inline_keyboard = [];
-      tempRow = [];
-      recordListPage = 1;
-      transactionsList = await fetchTransactionsList(
-        currentUser.id,
-        recordListPage
-      );
-      let newMessage = "";
-      newMessage += "💸 *Tus últimos movimientos*:\n\n";
-      const messages = await Promise.all(
-        transactionsList.map(async (transaction, index) => {
-          return `${index + 1}) ${
-            transaction.record_type === "INGRESO"
-              ? "🟢"
-              : transaction.record_type === "EGRESO"
-              ? "🔴"
-              : "🔵"
-          } *${transaction.detalles}* - ${await numberFormater(
-            transaction.monto,
-            currentUser.currency
-          )}\n`;
-        })
-      );
-      transactionsList.forEach((transaction, index) => {
-        tempRow.push({
-          text: `${index + 1}`,
-          callback_data: `details-transaction:${transaction.id}`,
-        });
-        if (tempRow.length === 5 || index === transactionsList.length - 1) {
-          inline_keyboard.push(tempRow);
-          tempRow = [];
-        }
-      });
-      newMessage = `💸 *Tus últimos movimientos*:\n\n${messages.join("")}`;
-      inline_keyboard.push([
-        {
-          text: "Regresar",
-          callback_data: "back_to_menu_btn",
-        },
-      ]);
-      await optionsEdit(
-        newMessage,
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-
-      return;
-    case "see_balance_details-btn":
-      textMesssage = "";
-      await optionsEdit(
-        "Estoy cargando la informacion",
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      textMesssage += `*Detalles de las transacciones en el mes de ${await getMonthString(
-        String(selectedMonth + 1)
-      )}*\n\n🟢 *Ingresos totales:* `;
-      textMesssage += "`";
-      let totalAmmount = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "INGRESO"
-      );
-      textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\n";
-      const incomeCategories = await fetchAllUserCategories(
-        currentUser.id,
-        "INGRESO"
-      );
-      const expenseCategories = await fetchAllUserCategories(
-        currentUser.id,
-        "EGRESO"
-      );
-      let tempMessage = "";
-      let initialBalance = await fetchInitialBalance(
-        currentUser.id,
-        selectedMonth + 1
-      );
-      if (initialBalance > 0) {
-        tempMessage += "- *Balance Inicial*: `";
-        tempMessage += await numberFormater(
-          initialBalance,
-          currentUser.currency
-        );
-        tempMessage += "`\n";
-        textMesssage += tempMessage;
-      }
-      tempMessage = "";
-      const incomeDetails = await Promise.all(
-        incomeCategories.map(async (category) => {
-          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
-            currentUser.id,
-            category.id,
-            selectedMonth + 1
-          );
-          let categoryMessage = `- *${category.name}*:`;
-          categoryMessage += "` ";
-          categoryMessage += await numberFormater(
-            totalAmmountbyMonth,
-            currentUser.currency
-          );
-          categoryMessage += "`";
-          return categoryMessage;
-        })
-      );
-      textMesssage += incomeDetails.join("\n");
-      textMesssage += `\n\n`;
-      await optionsEdit(
-        "No te vayas, sigo calculando...",
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      textMesssage += "🔴 Gastos totales: `";
-      totalAmmount = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "EGRESO"
-      );
-      textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\n";
-      const expensesDetails = await Promise.all(
-        expenseCategories.map(async (category) => {
-          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
-            currentUser.id,
-            category.id,
-            selectedMonth + 1
-          );
-          let categoryMessage = `- *${category.name}*:`;
-          categoryMessage += "` ";
-          categoryMessage += await numberFormater(
-            totalAmmountbyMonth,
-            currentUser.currency
-          );
-          categoryMessage += "`";
-          return categoryMessage;
-        })
-      );
-      textMesssage += expensesDetails.join("\n");
-      textMesssage += `\n\n`;
-      let totalSavings = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "AHORROS"
-      );
-      textMesssage += "💰 *Ahorros del mes* `";
-      textMesssage += await numberFormater(
-        totalSavings,
-        currentUser.currency
-      )
-      textMesssage += "`\n"
-      await optionsEdit(
-        textMesssage,
-        query.message.chat.id,
-        bot,
-        [[{ text: "Regresar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      return;
-    default:
-      if (query.data.startsWith("category-selection-option")) {
-        newUserRecord.category = query.data.split(":")[1];
-        const { type, details, ammount, category } = newUserRecord;
-        confirmationMessage = botReplies[26]
-          .replace("$type", type)
-          .replace("$details", details)
-          .replace(
-            "$ammount",
-            `${await numberFormater(ammount, currentUser.currency)}`
-          )
-          .replace("$category", category);
-        userStates[query.message.chat.id] = STATES.WAITING_FOR_CONFIRMATION;
-        await sendConfirmation(
-          confirmationMessage,
-          "confirm_transaction",
-          bot,
-          query.message.chat.id
-        );
-      } else if (query.data.startsWith("balance-month")) {
-        selectedMonth = query.data.split("-")[2];
-        const incomeBalanceByMonth = await fetchBalanceByMonth(
-          query.message.chat.id,
-          selectedMonth,
-          "INGRESO"
-        );
-        const expensesBalanceByMonth = await fetchBalanceByMonth(
-          query.message.chat.id,
-          selectedMonth,
-          "EGRESO"
-        );
-        const savingsBalanceByMonth = await fetchBalanceByMonth(
-          query.message.chat.id,
-          selectedMonth,
-          "AHORROS"
-        );
-        const generalBalanceByMonth =
-          incomeBalanceByMonth - expensesBalanceByMonth - savingsBalanceByMonth;
-        if (
-          incomeBalanceByMonth === 0 &&
-          expensesBalanceByMonth === 0 &&
-          savingsBalanceByMonth === 0
-        ) {
-          textMesssage = botReplies[33]
-            .replace("$month", await getMonthString(selectedMonth))
-            .replace("$currentYear", new Date().getFullYear());
-          inline_keyboard = [
-            [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-          ];
-        } else {
-          textMesssage = botReplies[32]
-            .replace("$month", await getMonthString(selectedMonth))
-            .replace(
-              "$income",
-              await numberFormater(incomeBalanceByMonth, currentUser.currency)
-            )
-            .replace(
-              "$expenses",
-              await numberFormater(expensesBalanceByMonth, currentUser.currency)
-            )
-            .replace(
-              "$savings",
-              await numberFormater(savingsBalanceByMonth, currentUser.currency)
-            )
-            .replace(
-              "$balance",
-              await numberFormater(generalBalanceByMonth, currentUser.currency)
-            );
-          inline_keyboard = [
-            [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-            [
-              {
-                text: "Ver detalles",
-                callback_data: "see_balance_details-btn",
-              },
-            ],
-          ];
-        }
-        await optionsEdit(
-          textMesssage,
-          query.message.chat.id,
-          bot,
-          inline_keyboard,
-          messageId
-        );
       } else if (query.data.startsWith("category-edit-selection-option")) {
         let categoryName = query.data.split(":")[1];
         inline_keyboard = [
@@ -1008,3 +1189,5 @@ export async function handleUserQueries(
   }
   console.log("query data: ", query.data);
 }
+
+ */

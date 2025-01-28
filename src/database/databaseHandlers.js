@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { encrypText } from "../helpers/encryptText.js";
+import { adjustToLocalTime } from "../utils/dateFormater.js";
 dotenv.config();
 const supabaseUrl = "https://cahmyhmvtrnmrlktnjlf.supabase.co";
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -19,21 +20,40 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  const { first_name, last_name, username, email, currency, user_iv } =
-    userProfile;
-  const { error } = await supabase.from("users").insert({
-    first_name: first_name
-      ? encrypText(first_name.toLowerCase(), user_iv)
-      : null,
-    last_name: last_name ? encrypText(last_name.toLowerCase(), user_iv) : null,
-    telegram_username: encrypText(username, user_iv),
-    telegram_id: chatId,
-    email: email ? encrypText(email.toLowerCase(), user_iv) : null,
-    currency: currency || null,
-    user_iv: user_iv || null,
-  });
-  if (error) {
+  try {
+    const {
+      first_name,
+      last_name,
+      telegram_username,
+      email,
+      currency,
+      user_iv,
+    } = userProfile;
+    const { error } = await supabase.from("users").insert({
+      first_name: first_name
+        ? encrypText(first_name.toLowerCase(), user_iv)
+        : null,
+      last_name: last_name
+        ? encrypText(last_name.toLowerCase(), user_iv)
+        : null,
+      telegram_username: encrypText(telegram_username, user_iv),
+      telegram_id: chatId,
+      email: email ? encrypText(email.toLowerCase(), user_iv) : null,
+      currency: currency || null,
+      user_iv: user_iv || null,
+      created_at: adjustToLocalTime(new Date()),
+    });
+    if (error) {
+      throw error;
+    } else {
+      return { success: true, error: "" };
+    }
+  } catch (error) {
     console.log("Error creando un usuario nuevo a la base de datos", error);
+    return {
+      success: false,
+      error: "Error creando un usuario nuevo a la base de datos",
+    };
   }
 }
 
@@ -112,9 +132,8 @@ async function fetchCategoryId(categoryName, userId) {
 export async function createNewRecord(newUserRecord) {
   const { details, ammount, created_at, user_id, category, type } =
     newUserRecord;
-  console.log(newUserRecord);
   let categoryId = 0;
-  if (category !== "AHORROS") {
+  if (category !== "AHORROS" && category !== "") {
     categoryId = await fetchCategoryId(category, user_id);
   } else {
     categoryId = null;
@@ -146,10 +165,10 @@ export async function createNewRecord(newUserRecord) {
 }
 
 export async function createNewSaving(newSaving) {
-  const { ammount, user_id } = newSaving;
+  const { ammount, user_id, created_at } = newSaving;
   try {
     const { error } = await supabase.from("savings").insert({
-      created_at: new Date(),
+      created_at: created_at,
       ammount: ammount,
       user_id: user_id,
     });
@@ -278,10 +297,10 @@ export async function updateUserCategory(newCategory) {
   }
 }
 
-export async function fetchTransactionsList(userId, pageSize) {
+export async function fetchTransactionsList(userId, pageNumber) {
   try {
-    const start = (pageSize - 1) * 10;
-    const end = start - pageSize - 1;
+    const start = (pageNumber - 1) * 10;
+    const end = start + (10 - 1);
     const { data, error } = await supabase
       .from("records")
       .select()
@@ -363,7 +382,7 @@ export async function fetchAmmountByCategoriesandMonth(
     totalAmmount = data.reduce((acc, cur) => acc + cur.monto, 0);
     return totalAmmount;
   } catch (error) {
-    console.log("Error realiando fetch por mes y categoria: ", error)
+    console.log("Error realiando fetch por mes y categoria: ", error);
   }
 }
 
@@ -380,8 +399,8 @@ export async function fetchInitialBalance(userId, month) {
     if (error) {
       throw error;
     }
-    return data[0].monto
+    return data[0].monto;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
