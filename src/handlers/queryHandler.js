@@ -1,5 +1,6 @@
 import {
   createNewRecord,
+  createNewSaving,
   createNewUser,
   fetchCurrentUser,
 } from "../database/databaseHandlers.js";
@@ -40,7 +41,7 @@ export default async function handleUserQueries(
     case "not-edit-first-name-btn":
       newTextMessage = botReplies[8].replace(
         "$username",
-        currentUser.first_name
+        userManager.getNewUser(chatId).first_name
       );
       await messageSender.sendTextMessage(chatId, newTextMessage, []);
       await userManager.setUserStatus(chatId, "waiting-for-new-email");
@@ -51,7 +52,7 @@ export default async function handleUserQueries(
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
         return;
       }
-      const newProfile = await createNewUser(chatId, currentUser);
+      const newProfile = await createNewUser(chatId, userManager.getNewUser(chatId));
       if (!newProfile.success) {
         await messageSender.sendTextMessage(chatId, newProfile.error, []);
         return;
@@ -100,8 +101,41 @@ export default async function handleUserQueries(
         await messageSender(msg.from.id, setInitialBalance.error, bot);
         return;
       }
+      await userManager.setUserTransaction(chatId, {})
       userManager.setUserStatus(chatId, "waiting_for_initial_savings");
       await messageSender.sendTextMessage(chatId, botReplies[16], []);
+      return;
+    case "reset_new_initial_savings_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_savings");
+      await messageSender.sendTextMessage(chatId, botReplies[21], []);
+      return;
+    case "confirm_initial_savings_btn":
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: await adjustToLocalTime(new Date()),
+      });
+      const { ammount, created_at, user_id } =
+        userManager.getUserTransaction(chatId);
+      const setInitialSavings = await createNewSaving({
+        created_at: created_at,
+        ammount: ammount,
+        user_id: user_id,
+      });
+      if (!setInitialSavings.success) {
+        await messageSender(msg.from.id, setInitialSavings.error, bot);
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[17], []);
+      await userManager.setUserStatus(chatId, "initial");
+      await userManager.setUserTransaction(chatId, {})
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId);
+      return;
     default:
       console.log(query.data);
       break;

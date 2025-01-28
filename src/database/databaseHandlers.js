@@ -166,10 +166,10 @@ export async function createNewRecord(newUserRecord) {
 }
 
 export async function createNewSaving(newSaving) {
-  const { ammount, user_id } = newSaving;
+  const { ammount, user_id, created_at } = newSaving;
   try {
     const { error } = await supabase.from("savings").insert({
-      created_at: new Date(),
+      created_at: created_at,
       ammount: ammount,
       user_id: user_id,
     });

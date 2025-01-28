@@ -25,14 +25,14 @@ export default async function commandHandler(
         }
       });
       if (!isUser) {
+        const newUserProfile = {}
         userManager.setUserStatus(chatId, "initial");
-        userProfile.telegram_id = chatId;
-        userProfile.first_name = msg.from.first_name;
-        userProfile.last_name = msg.from.last_name;
-        userProfile.telegram_username = msg.from.username;
-        userProfile.user_iv = await generateUserIV();
-        userManager.setUserProfile(chatId, userProfile);
-        currentUser = userManager.getUserProfile(chatId);
+        newUserProfile.telegram_id = chatId;
+        newUserProfile.first_name = msg.from.first_name;
+        newUserProfile.last_name = msg.from.last_name;
+        newUserProfile.telegram_username = msg.from.username;
+        newUserProfile.user_iv = await generateUserIV();
+        userManager.setNewUser(chatId, newUserProfile);
         await messageSender.sendTextMessage(chatId, botReplies[0], []);
         await new Promise((resolve) => setTimeout(resolve, 200));
         inline_keyboard = [

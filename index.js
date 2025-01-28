@@ -29,7 +29,7 @@ const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 const messageSender = new MessageSender(bot);
 let currentUser = {};
 // Filtrado de mensajes normales
-userManager.setUserStatus(896160399, "waiting_for_initial_balance")
+//userManager.setUserStatus(896160399, "waiting_for_initial_savings")
 bot.on("message", async (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;

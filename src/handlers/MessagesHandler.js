@@ -1,13 +1,9 @@
 import {
-  createNewRecord,
-  createNewSaving,
   fetchCurrentUser,
-  fetchCurrentUserId,
   insertNewTransactionCategory,
 } from "../database/databaseHandlers.js";
 import { botErrorMessages } from "../messages/botErrorMessages.js";
 import { botReplies } from "../messages/botMessages.js";
-import { adjustToLocalTime } from "../utils/dateFormater.js";
 import {
   validateEmail,
   validateIsNumber,
@@ -32,10 +28,7 @@ export default async function handleUserMessages(
   switch (currentUserStatus) {
     case "waiting-for-new-user-name":
       newTextMessage = botReplies[3].replace("$username", msg.text);
-      await userManager.setUserProfile(chatId, {
-        ...currentUser,
-        first_name: msg.text,
-      });
+      await userManager.setNewUser(chatId, {...userManager.getNewUser(chatId), first_name: msg.text })
       await messageSender.sendTextMessage(chatId, newTextMessage, []);
       await new Promise((resolve) => setTimeout(resolve, 200));
       await messageSender.sendTextMessage(chatId, botReplies[4], []);
@@ -49,8 +42,8 @@ export default async function handleUserMessages(
         return;
       }
       newTextMessage = botReplies[5].replace("$email", msg.text);
-      await userManager.setUserProfile(chatId, {
-        ...currentUser,
+      await userManager.setNewUser(chatId, {
+        ...userManager.getNewUser(chatId),
         email: msg.text,
       });
       await userManager.setUserStatus(chatId, "waiting_for_new_currency");
@@ -64,17 +57,16 @@ export default async function handleUserMessages(
         await messageSender.sendTextMessage(chatId, newTextMessage, []);
         return;
       }
-      await userManager.setUserProfile(chatId, {
-        ...currentUser,
+      await userManager.setNewUser(chatId, {
+        ...userManager.getNewUser(chatId),
         currency: msg.text,
       });
-      currentUser = userManager.getUserProfile(chatId);
       newTextMessage = botReplies[7]
-        .replace("$first_name", currentUser.first_name || "")
-        .replace("$user_lastname", currentUser.last_name || "")
-        .replace("$username", `@${currentUser.telegram_username}`)
-        .replace("$email", currentUser.email || "")
-        .replace("$currency", currentUser.currency || "");
+      .replace("$first_name", userManager.getNewUser(chatId).first_name || "")
+      .replace("$user_lastname", userManager.getNewUser(chatId).last_name || "")
+      .replace("$username", `@${userManager.getNewUser(chatId).telegram_username}`)
+      .replace("$email", userManager.getNewUser(chatId).email || "")
+      .replace("$currency", userManager.getNewUser(chatId).currency || "");
       inline_keyboard = [
         [
           { text: "Confirmar", callback_data: "confirm_new_profile_btn" },
@@ -184,8 +176,8 @@ export default async function handleUserMessages(
         ],
       ];
       userManager.setUserStatus(chatId, "waiting_for_confirmation");
-      userManager.setUserAmmount(chatId, validateInitialBalance.ammount)
-      userManager.setUserTransaction(chatId, newUserRecord)
+      userManager.setUserAmmount(chatId, validateInitialBalance.ammount);
+      userManager.setUserTransaction(chatId, newUserRecord);
       messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
       return;
     case "waiting_for_initial_savings":
@@ -194,23 +186,33 @@ export default async function handleUserMessages(
         await messageSender(msg.from.id, validateInitialSavings.error, bot);
         return;
       }
-      const initialSavings = {};
-      initialSavings.ammount = validateInitialSavings.ammount;
-      initialSavings.user_id = await fetchCurrentUserId(msg.from.id);
-      const setInitialSavings = await createNewSaving(initialSavings);
-      if (!setInitialSavings.success) {
-        await messageSender(msg.from.id, setInitialSavings.error, bot);
-        return;
-      }
-      await messageSender.sendSticker(
-        chatId,
-        "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ"
+      newUserRecord.details = "Ahorros iniciales";
+      newUserRecord.ammount = validateInitialSavings.ammount;
+      newUserRecord.user_id = currentUser.id;
+      newUserRecord.category = "";
+      newUserRecord.type = "AHORROS";
+      userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      userManager.setUserTransaction(chatId, newUserRecord);
+      newTextMessage = botReplies[20].replace(
+        "$ammount",
+        await numberFormater(
+          validateInitialSavings.ammount,
+          currentUser.currency
+        )
       );
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      await messageSender.sendTextMessage(chatId, botReplies[17], []);
-      await userManager.setUserStatus(chatId, "initial");
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      await messageSender.sendMenu(chatId);
+      inline_keyboard = [
+        [
+          {
+            text: "Confirmo el monto",
+            callback_data: "confirm_initial_savings_btn",
+          },
+          {
+            text: "Escribir otro monto",
+            callback_data: "reset_new_initial_savings_btn",
+          },
+        ],
+      ];
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
       return;
     default:
       break;

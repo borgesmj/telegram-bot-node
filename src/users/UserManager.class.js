@@ -4,6 +4,7 @@ export default class Users{
         this.userProfile = {}
         this.userAmmount = {}
         this.userTransaction = {}
+        this.newUser = {}
     }
 
     setUserStatus(chatId, status){
@@ -36,5 +37,13 @@ export default class Users{
 
     getUserTransaction(chatId){
         return this.userTransaction[chatId]
+    }
+
+    setNewUser(chatId, newUser){
+        this.newUser[chatId] = newUser
+    }
+
+    getNewUser(chatId){
+        return this.newUser[chatId]
     }
 }

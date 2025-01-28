@@ -38,5 +38,9 @@ export const botReplies = [
   // ! 18
   "🤖\n\nConfirma que el monto para tu balance inicial es de: `$ammount`,\n\nDe lo contrario, haz click en el boton *Escribir otro monto*",
   // ! 19
-"🤖\n\nEscribe cuál será el monto de tu balance incial. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`"
+"🤖\n\nEscribe cuál será el monto de tu balance incial. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
+// ! 20
+"🤖\n\nConfirma que el monto para tus ahorros iniciales es de: `$ammount`,\n\nDe lo contrario, haz click en el boton *Escribir otro monto*",
+// ! 21
+"🤖\n\nEscribe cuál será el monto de tus ahorros iniciales. Recuerda escribir el monto con numeros y sin comas,\n\nsi deseas escribir decimales, hazlo con un punto. Ejemplo: `XXXXXX.32`",
 ];
