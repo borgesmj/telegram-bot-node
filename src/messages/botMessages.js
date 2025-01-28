@@ -62,5 +62,13 @@ export const botReplies = [
   // ! 30
   "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`",
   // ! 31
-  "🤖\n\nTus ahorros fueron guardados con éxito 💰"
+  "🤖\n\nTus ahorros fueron guardados con éxito 💰",
+  // ! 32
+  "🤖\n\nResumen de tus finanzas del mes $month:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
+  // ! 33
+  "🤖\n\nDisculpa, no hay movimientos guardados para el mes de $month del $currentYear",
+  // ! 34
+  "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
+  // ! 35
+  "🤖\n\nHasta ahota tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo."
 ];
