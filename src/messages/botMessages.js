@@ -88,5 +88,14 @@ export const botReplies = [
   // ! 43
   "🌱 ¡No te desanimes! Ahorrar esa cantidad es un buen comienzo. Analiza tus gastos y ajusta un poco más; cada pequeño esfuerzo te acerca a tus sueños. ¡Tú puedes! 🌟}",
   // ! 44
-  "💡 No te preocupes, todos los comienzos son importantes. Incluso un pequeño paso hacia el ahorro ya es un logro. Revisa tus gastos, establece prioridades, y verás cómo puedes ahorrar más el próximo mes. ¡Tú puedes lograrlo! 🌟"
+  "💡 No te preocupes, todos los comienzos son importantes. Incluso un pequeño paso hacia el ahorro ya es un logro. Revisa tus gastos, establece prioridades, y verás cómo puedes ahorrar más el próximo mes. ¡Tú puedes lograrlo! 🌟",
+  // ! 45
+  `*Perfil del usuario 👤*
+
+  👤 *Nombres:* $userFirstName  
+  👤 *Apellidos:* $userLastName 
+  📧 *E-mail:* $userEmail  
+  📱 *Telegram:* @$username 
+  💲 *Moneda predeterminada:* $userCurrency
+  `
 ];
