@@ -13,7 +13,7 @@ import {
   validateIsNumber,
   validateText,
 } from "../utils/validators.js";
-
+import numberFormater from "../utils/numberFormater.js";
 export default async function handleUserMessages(
   msg,
   userManager,
@@ -23,7 +23,8 @@ export default async function handleUserMessages(
   let inline_keyboard = [];
   let newTextMessage = "";
   let chatId = msg.from.id;
-  currentUser = await fetchCurrentUser(chatId);
+  userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
+  currentUser = await userManager.getUserProfile(chatId);
   let validatedText = null;
   let sendNewCategory = null;
   let newUserRecord = {};
@@ -160,38 +161,56 @@ export default async function handleUserMessages(
       }
       newUserRecord.details = "Balance Inicial";
       newUserRecord.ammount = validateInitialBalance.ammount;
-      newUserRecord.created_at = adjustToLocalTime(new Date());
-      newUserRecord.user_id = await fetchCurrentUserId(msg.from.id);
+      newUserRecord.user_id = currentUser.id;
       newUserRecord.category = "";
       newUserRecord.type = "INGRESO";
-      const setInitialBalance = await createNewRecord(newUserRecord);
-      if (!setInitialBalance.success) {
-        await messageSender(msg.from.id, setInitialBalance.error, bot);
+      newTextMessage = botReplies[18].replace(
+        "$ammount",
+        await numberFormater(
+          validateInitialBalance.ammount,
+          currentUser.currency
+        )
+      );
+      inline_keyboard = [
+        [
+          {
+            text: "Confirmo el monto",
+            callback_data: "confirm_initial_balance_btn",
+          },
+          {
+            text: "Escribir otro monto",
+            callback_data: "reset_new_initial_balance_btn",
+          },
+        ],
+      ];
+      userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      userManager.setUserAmmount(chatId, validateInitialBalance.ammount)
+      userManager.setUserTransaction(chatId, newUserRecord)
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_initial_savings":
+      const validateInitialSavings = await validateIsNumber(msg.text);
+      if (!validateInitialSavings.success) {
+        await messageSender(msg.from.id, validateInitialSavings.error, bot);
         return;
       }
-      userManager.setUserStatus(chatId, "waiting_for_initial_savings");
-      await messageSender.sendTextMessage(chatId, botReplies[16], []);
-      return;
-      case "waiting_for_initial_savings":
-        const validateInitialSavings = await validateIsNumber(msg.text);
-        if (!validateInitialSavings.success) {
-          await messageSender(msg.from.id, validateInitialSavings.error, bot);
-          return;
-        }
-        const initialSavings = {};
-        initialSavings.ammount = validateInitialSavings.ammount;
-        initialSavings.user_id = await fetchCurrentUserId(msg.from.id);
-        const setInitialSavings = await createNewSaving(initialSavings);
-        if (!setInitialSavings.success) {
-          await messageSender(msg.from.id, setInitialSavings.error, bot);
-          return;
-        }
-        await messageSender.sendSticker(chatId, "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ")
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        await messageSender.sendTextMessage(chatId, botReplies[17], [])
-        await userManager.setUserStatus(chatId, "initial")
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        await messageSender.sendMenu(chatId)
+      const initialSavings = {};
+      initialSavings.ammount = validateInitialSavings.ammount;
+      initialSavings.user_id = await fetchCurrentUserId(msg.from.id);
+      const setInitialSavings = await createNewSaving(initialSavings);
+      if (!setInitialSavings.success) {
+        await messageSender(msg.from.id, setInitialSavings.error, bot);
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgIAAxkBAAIHDmeOm69HfXLndfrFKBK2HSfi4zdBAAJeEgAC7JkpSXzv2aVH92Q7NgQ"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[17], []);
+      await userManager.setUserStatus(chatId, "initial");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId);
       return;
     default:
       break;

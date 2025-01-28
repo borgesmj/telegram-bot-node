@@ -7,7 +7,7 @@ import TelegramBotAPI from "node-telegram-bot-api";
 import commandHandler from "./src/handlers/commandHandler.js";
 import handleUserMessages from "./src/handlers/MessagesHandler.js";
 import handleUserQueries from "./src/handlers/queryHandler.js";
-import Users from "./src/users/userManager.js";
+import Users from "./src/users/UserManager.class.js";
 import MessageSender from "./src/senders/MessageSender.class.js";
 // Express
 const app = express();
@@ -27,9 +27,9 @@ const userManager = new Users();
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 const messageSender = new MessageSender(bot);
-// Filtrado de mensajes normales
 let currentUser = {};
-userManager.setUserStatus(896160399, "waiting_for_expenses_categories")
+// Filtrado de mensajes normales
+userManager.setUserStatus(896160399, "waiting_for_initial_balance")
 bot.on("message", async (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;

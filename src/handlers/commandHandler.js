@@ -13,7 +13,9 @@ export default async function commandHandler(
   let userProfile = {};
   let inline_keyboard = [];
   let newTextMessage = "";
-  switch (command) {
+  userManager.setUserProfile(chatId, await fetchCurrentUser(chatId))
+  currentUser = await userManager.getUserProfile(chatId)
+  switch (command.toLowerCase()) {
     case "start":
       const allUsers = await fetchUsers();
       let isUser = false;

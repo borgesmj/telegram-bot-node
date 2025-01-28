@@ -134,7 +134,7 @@ export async function createNewRecord(newUserRecord) {
     newUserRecord;
   console.log(newUserRecord);
   let categoryId = 0;
-  if (category !== "AHORROS") {
+  if (category !== "AHORROS" && category !== "") {
     categoryId = await fetchCategoryId(category, user_id);
   } else {
     categoryId = null;

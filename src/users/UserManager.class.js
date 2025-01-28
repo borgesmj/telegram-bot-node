@@ -2,6 +2,8 @@ export default class Users{
     constructor(){
         this.userStatus = {}
         this.userProfile = {}
+        this.userAmmount = {}
+        this.userTransaction = {}
     }
 
     setUserStatus(chatId, status){
@@ -18,5 +20,21 @@ export default class Users{
 
     getUserProfile(chatId){
         return this.userProfile[chatId] 
+    }
+
+    setUserAmmount(chatId, ammount){
+        this.userAmmount[chatId] = ammount
+    }
+
+    getUserAmmount(chatId){
+        return this.userAmmount[chatId]
+    }
+
+    setUserTransaction(chatId, details){
+        this.userTransaction[chatId] = details
+    }
+
+    getUserTransaction(chatId){
+        return this.userTransaction[chatId]
     }
 }

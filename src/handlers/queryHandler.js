@@ -1,5 +1,10 @@
-import { createNewUser } from "../database/databaseHandlers.js";
+import {
+  createNewRecord,
+  createNewUser,
+  fetchCurrentUser,
+} from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
+import { adjustToLocalTime } from "../utils/dateFormater.js";
 
 export default async function handleUserQueries(
   query,
@@ -11,7 +16,8 @@ export default async function handleUserQueries(
   let newTextMessage = "";
   let messageId = query.message.message_id;
   let chatId = query.message.chat.id;
-  currentUser = userManager.getUserProfile(chatId);
+  userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
+  currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
     case "edit-first-name-btn":
       newTextMessage = botReplies[2];
@@ -67,11 +73,35 @@ export default async function handleUserQueries(
       );
       return;
     case "end_categories_configuration_btn":
-      await userManager.setUserStatus(chatId, "waiting_for_initial_balance")
+      await userManager.setUserStatus(chatId, "waiting_for_initial_balance");
       await messageSender.sendTextMessage(chatId, botReplies[14], []);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      await messageSender.sendTextMessage(chatId, botReplies[15], [])
+      await messageSender.sendTextMessage(chatId, botReplies[15], []);
       return;
+    case "reset_new_initial_balance_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_initial_balance");
+      await messageSender.sendTextMessage(chatId, botReplies[19], []);
+      return;
+    case "confirm_initial_balance_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const newInitialBalance = userManager.getUserAmmount(chatId);
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        ammount: newInitialBalance,
+        created_at: adjustToLocalTime(new Date()),
+      });
+
+      const setInitialBalance = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!setInitialBalance.success) {
+        await messageSender(msg.from.id, setInitialBalance.error, bot);
+        return;
+      }
+      userManager.setUserStatus(chatId, "waiting_for_initial_savings");
+      await messageSender.sendTextMessage(chatId, botReplies[16], []);
     default:
       console.log(query.data);
       break;
