@@ -297,10 +297,10 @@ export async function updateUserCategory(newCategory) {
   }
 }
 
-export async function fetchTransactionsList(userId, pageSize) {
+export async function fetchTransactionsList(userId, pageNumber) {
   try {
-    const start = (pageSize - 1) * 10;
-    const end = start - pageSize - 1;
+    const start = (pageNumber - 1) * 10;
+    const end = start + (10 - 1);
     const { data, error } = await supabase
       .from("records")
       .select()

@@ -63,4 +63,24 @@ export default class MessageSender {
       console.log("No pudo enviarse el sticker, intente de nuevo: ", error);
     }
   }
+  editMessageToMenu(chatId, messageId) {
+    try {
+      this.bot.editMessageText("*Menu Principal* 📋", {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "💰 Nuevo Ingreso", callback_data: "new_income" }],
+            [{ text: "💸 Nuevo Retiro", callback_data: "new_withdraw" }],
+            [{ text: "💵 Nuevo Ahorro", callback_data: "new_savings" }],
+            [{ text: "📋 Ver movimientos", callback_data: "see_records_list" }],
+            [{ text: "📊 Ver saldos", callback_data: "see_balances" }],
+            [{ text: "👤 Mi Perfil", callback_data: "my_profile" }],
+            [{ text: "ℹ️ Info de este bot", callback_data: "about_bot" }],
+          ],
+        },
+        parse_mode: "markdown",
+      });
+    } catch (error) {}
+  }
 }

@@ -3,6 +3,7 @@ import {
   createNewSaving,
   createNewUser,
   fetchCurrentUser,
+  fetchTransactionsList,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
@@ -20,6 +21,9 @@ export default async function handleUserQueries(
   let chatId = query.message.chat.id;
   let confirmationMessage = "";
   let confirmTransaction = null;
+  let tempRow = [];
+  let recordListPage = 0;
+  let transactionsList = [];
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -251,11 +255,76 @@ export default async function handleUserQueries(
         chatId,
         "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
       );
-      await messageSender.sendTextMessage(chatId, botReplies[31], [])
+      await messageSender.sendTextMessage(chatId, botReplies[31], []);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      await messageSender.sendMenu(chatId)
-      userManager.setUserStatus(chatId, "initial")
-      userManager.setUserTransaction(chatId, {})
+      await messageSender.sendMenu(chatId);
+      userManager.setUserStatus(chatId, "initial");
+      userManager.setUserTransaction(chatId, {});
+      return;
+    case "see_records_list":
+      inline_keyboard = [];
+      tempRow = [];
+      recordListPage = 1;
+      transactionsList = await fetchTransactionsList(
+        currentUser.id,
+        recordListPage
+      );
+      newTextMessage = "";
+      newTextMessage += "💸 *Tus últimos movimientos*:\n\n";
+      const messages = await Promise.all(
+        transactionsList.map(async (transaction, index) => {
+          return `${index + 1}) ${
+            transaction.record_type === "INGRESO"
+              ? "🟢"
+              : transaction.record_type === "EGRESO"
+              ? "🔴"
+              : "🔵"
+          } *${transaction.detalles}* - ${await numberFormater(
+            transaction.monto,
+            currentUser.currency
+          )}\n`;
+        })
+      );
+      transactionsList.forEach((transaction, index) => {
+        tempRow.push({
+          text: `${index + 1}`,
+          callback_data: `details-transaction:${transaction.id}`,
+        });
+        if (tempRow.length === 5 || index === transactionsList.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      newTextMessage = `💸 *Tus últimos movimientos*:\n\n${messages.join("")}`;
+      /**
+       * 
+      inline_keyboard.push([
+        {
+          text: "⬅",
+          callback_data: "previous_page_btn",
+        },
+        {
+          text: "➡",
+          callback_data: "next_page_btn",
+        },
+      ]);
+      */
+      inline_keyboard.push([
+        {
+          text: "Regresar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+
+      return;
+    case "back_to_menu_btn":
+      await messageSender.editMessageToMenu(chatId, messageId);
       return;
     default:
       console.log(query.data);
