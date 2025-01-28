@@ -19,6 +19,7 @@ export default async function handleUserQueries(
   let messageId = query.message.message_id;
   let chatId = query.message.chat.id;
   let confirmationMessage = "";
+  let confirmTransaction = null;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -164,7 +165,17 @@ export default async function handleUserQueries(
         created_at: adjustToLocalTime(new Date()),
         user_id: currentUser.id,
       });
-      await createNewRecord(userManager.getUserTransaction(chatId));
+      confirmTransaction = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
       await messageSender.sendSticker(
         chatId,
         "CAACAgIAAxkBAAIEd2eY7ZpLKIwF2P1qz0kzamW4FhIqAAL-AANWnb0K2gRhMC751_82BA"
@@ -185,6 +196,67 @@ export default async function handleUserQueries(
         messageId
       );
       userManager.setUserStatus(chatId, "waiting_for_transaction_name");
+      return;
+    case "new_savings":
+      userManager.setUserTransaction(chatId, {
+        type: "AHORROS",
+        details: "Nuevos ahorros",
+        category: "AHORROS",
+      });
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await userManager.setUserStatus(chatId, "waiting_for_new_savings");
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[29],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "confirm_new_savings_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: adjustToLocalTime(new Date()),
+        user_id: currentUser.id,
+      });
+      confirmTransaction = await createNewRecord(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      confirmTransaction = await createNewSaving({
+        ammount: userManager.getUserTransaction(chatId).ammount,
+        created_at: userManager.getUserTransaction(chatId).created_at,
+        user_id: currentUser.id,
+      });
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      await messageSender.sendSticker(
+        chatId,
+        "CAACAgEAAxkBAAIK82eRDxisoxm1di27Ab7-ZOhMss0hAAIdAQACOA6CEeGEiSFq5-6JNgQ"
+      );
+      await messageSender.sendTextMessage(chatId, botReplies[31], [])
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId)
+      userManager.setUserStatus(chatId, "initial")
+      userManager.setUserTransaction(chatId, {})
+      return;
     default:
       console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {

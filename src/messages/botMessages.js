@@ -57,4 +57,10 @@ export const botReplies = [
   "🤖\n\nTu movimiento fue guardado con éxito",
   // !28
   "🤖\n\n*NUEVO EGRESO*\n\nEnviame el nombre de la transaccion.\n\nPara cancelar, haz click en el botón de abajo",
+  // ! 29
+  "🤖\n\n*MUY IMPORTANTE TENER AHORROS!!!*\n\nIngresa el monto que quieras ahorrar:\n\nSi quieres cancelar, hazlo por el boton de abajo.",
+  // ! 30
+  "🤖\n\nConfirma el nuevo ahorro:\n\n*Monto:* `$ammount`",
+  // ! 31
+  "🤖\n\nTus ahorros fueron guardados con éxito 💰"
 ];

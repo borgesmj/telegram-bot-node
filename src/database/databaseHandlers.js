@@ -132,7 +132,6 @@ async function fetchCategoryId(categoryName, userId) {
 export async function createNewRecord(newUserRecord) {
   const { details, ammount, created_at, user_id, category, type } =
     newUserRecord;
-  console.log(newUserRecord);
   let categoryId = 0;
   if (category !== "AHORROS" && category !== "") {
     categoryId = await fetchCategoryId(category, user_id);

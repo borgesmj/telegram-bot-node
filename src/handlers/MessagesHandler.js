@@ -22,6 +22,7 @@ export default async function handleUserMessages(
   let chatId = msg.from.id;
   let inputText = null;
   let inputNumber = null;
+  let confirmationMessage = "";
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   let validatedText = null;
@@ -254,7 +255,7 @@ export default async function handleUserMessages(
       let userCategories = [];
       let transactionType = userManager.getUserTransaction(chatId).type;
       userCategories = await fetchUserCategories(chatId, transactionType);
-      let inline_keyboard = [];
+      inline_keyboard = [];
       let tempRow = [];
 
       userCategories.forEach((category, index) => {
@@ -274,6 +275,39 @@ export default async function handleUserMessages(
         },
       ]);
       messageSender.sendTextMessage(chatId, botReplies[25], inline_keyboard);
+      return;
+    case "waiting_for_new_savings":
+      inputNumber = await validateIsNumber(msg.text);
+      if (!inputNumber.success) {
+        await messageSender(msg.from.id, inputNumber.error, bot);
+        return;
+      }
+      await userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        ammount: inputNumber.ammount,
+      });
+      confirmationMessage = botReplies[30].replace(
+        "$ammount",
+        await numberFormater(inputNumber.ammount, currentUser.currency)
+      );
+      await userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      inline_keyboard = [
+        [
+          {
+            text: "Confirmar",
+            callback_data: "confirm_new_savings_btn",
+          },
+          {
+            text: "Cancelar",
+            callback_data: "back_to_menu_btn",
+          },
+        ],
+      ];
+      await messageSender.sendTextMessage(
+        chatId,
+        confirmationMessage,
+        inline_keyboard
+      );
       return;
     default:
       break;
