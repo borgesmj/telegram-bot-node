@@ -70,5 +70,23 @@ export const botReplies = [
   // ! 34
   "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
   // ! 35
-  "🤖\n\nHasta ahota tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo."
+  "🤖\n\nHasta ahota tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo.",
+  // ! 36
+  "🟢 *Ingresos totales:* `$ammount`",
+  // ! 37
+  "\t-\t*$category*: `$ammount`",
+  // ! 38
+  "🔴 *Gastos totales:* `$ammount`",
+  // ! 39
+  "\n\n🎯 Este mes ahorraste un total de `$ammount`, lo que representa el `$percent%` de tus ingresos.\n\n",
+  // ! 40
+  "💵 Saldo final del mes: `$ammount`",
+  // ! 41
+  "🎉 ¡Increíble trabajo! Ahorrar esa cantidad de tus ingresos demuestra un excelente control de tus finanzas. ¡Sigue así y alcanzarás tus metas más rápido de lo que imaginas! 🚀",
+  // ! 42
+  "👏 ¡Buen progreso! Ahorrar de tus ingresos es un paso sólido hacia tus objetivos. Un poco más de esfuerzo y pronto verás grandes resultados. ¡No te detengas! 💪",
+  // ! 43
+  "🌱 ¡No te desanimes! Ahorrar esa cantidad es un buen comienzo. Analiza tus gastos y ajusta un poco más; cada pequeño esfuerzo te acerca a tus sueños. ¡Tú puedes! 🌟}",
+  // ! 44
+  "💡 No te preocupes, todos los comienzos son importantes. Incluso un pequeño paso hacia el ahorro ya es un logro. Revisa tus gastos, establece prioridades, y verás cómo puedes ahorrar más el próximo mes. ¡Tú puedes lograrlo! 🌟"
 ];

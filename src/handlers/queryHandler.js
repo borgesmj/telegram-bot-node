@@ -2,8 +2,11 @@ import {
   createNewRecord,
   createNewSaving,
   createNewUser,
+  fetchAllUserCategories,
+  fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
   fetchCurrentUser,
+  fetchInitialBalance,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
 } from "../database/databaseHandlers.js";
@@ -29,6 +32,7 @@ export default async function handleUserQueries(
   let transactionsList = [];
   let selectedMonth = 0;
   let totalSavings = 0;
+  let tempAmmount = 0;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -551,6 +555,227 @@ export default async function handleUserQueries(
         inline_keyboard,
         messageId
       );
+      return;
+    case "see_balance_details-btn":
+      newTextMessage = "";
+      await messageSender.editTextMessage(
+        chatId,
+        "🤖\n\nDame un momento, estoy cargando la informacion....",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      newTextMessage += `*Detalles de las transacciones en el mes de ${await getMonthString(
+        String(selectedMonth + 1)
+      )}*\n\n`;
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "INGRESO"
+      );
+      let userAmmounts = {
+        totalIncomes: tempAmmount,
+      };
+      newTextMessage += botReplies[36].replace(
+        "$ammount",
+        await numberFormater(tempAmmount, currentUser.currency)
+      );
+      tempAmmount = 0;
+      newTextMessage += "\n";
+      let initialBalance = await fetchInitialBalance(
+        currentUser.id,
+        selectedMonth + 1
+      );
+      if (initialBalance > 0) {
+        newTextMessage += botReplies[37]
+          .replace("$category", "Balance Inicial")
+          .replace(
+            "$ammount",
+            await numberFormater(initialBalance, currentUser.currency)
+          );
+      }
+      newTextMessage += "\n";
+      const incomeCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "INGRESO"
+      );
+      const expenseCategories = await fetchAllUserCategories(
+        currentUser.id,
+        "EGRESO"
+      );
+      const incomeDetails = await Promise.all(
+        incomeCategories.map(async (category) => {
+          tempAmmount = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let tempMessage = botReplies[37]
+            .replace("$category", category.name)
+            .replace(
+              "$ammount",
+              await numberFormater(tempAmmount, currentUser.currency)
+            );
+          return tempMessage;
+        })
+      );
+      newTextMessage += incomeDetails.join("\n");
+      await messageSender.editTextMessage(
+        chatId,
+        "🤖\n\nSigo trabajando para extraer tu información....",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      newTextMessage += "\n\n";
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "EGRESO"
+      );
+      userAmmounts.expenses = tempAmmount;
+      newTextMessage += botReplies[38].replace(
+        "$ammount",
+        await numberFormater(tempAmmount, currentUser.currency)
+      );
+      tempAmmount = 0;
+      newTextMessage += "\n";
+      const expensesDetails = await Promise.all(
+        expenseCategories.map(async (category) => {
+          tempAmmount = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let tempMessage = botReplies[37]
+            .replace("$category", category.name)
+            .replace(
+              "$ammount",
+              await numberFormater(tempAmmount, currentUser.currency)
+            );
+          return tempMessage;
+        })
+      );
+      newTextMessage += expensesDetails.join("\n");
+      newTextMessage += "\n\n";
+      tempAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "AHORROS"
+      );
+      userAmmounts.savings = tempAmmount;
+      newTextMessage += "\n\n";
+      newTextMessage += botReplies[40].replace(
+        "$ammount",
+        await numberFormater(
+          userAmmounts.totalIncomes -
+            userAmmounts.expenses -
+            userAmmounts.savings,
+          currentUser.currency
+        )
+      );
+      const percent = ((tempAmmount / userAmmounts.totalIncomes) * 100).toFixed(
+        2
+      );
+      newTextMessage += botReplies[39]
+        .replace(
+          "$ammount",
+          await numberFormater(tempAmmount, currentUser.currency)
+        )
+        .replace("$percent", percent);
+      if (percent >= 15) {
+        newTextMessage += botReplies[41];
+      } else if (percent > 7 && percent < 15) {
+        newTextMessage += botReplies[42];
+      } else if (percent <= 7 && percent > 1) {
+        newTextMessage += botReplies[43];
+      } else {
+        newTextMessage += botReplies[44];
+      }
+      inline_keyboard = [
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      /*
+      let tempMessage = "";
+      }
+      tempMessage = "";
+      const incomeDetails = await Promise.all(
+        incomeCategories.map(async (category) => {
+          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let categoryMessage = `- *${category.name}*:`;
+          categoryMessage += "` ";
+          categoryMessage += await numberFormater(
+            totalAmmountbyMonth,
+            currentUser.currency
+          );
+          categoryMessage += "`";
+          return categoryMessage;
+        })
+      );
+      textMesssage += incomeDetails.join("\n");
+      textMesssage += `\n\n`;
+      await optionsEdit(
+        "No te vayas, sigo calculando...",
+        query.message.chat.id,
+        bot,
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      textMesssage += "🔴 Gastos totales: `";
+      totalAmmount = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "EGRESO"
+      );
+      textMesssage += `${totalAmmount}`;
+      textMesssage += "`\n\n";
+      const expensesDetails = await Promise.all(
+        expenseCategories.map(async (category) => {
+          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
+            currentUser.id,
+            category.id,
+            selectedMonth + 1
+          );
+          let categoryMessage = `- *${category.name}*:`;
+          categoryMessage += "` ";
+          categoryMessage += await numberFormater(
+            totalAmmountbyMonth,
+            currentUser.currency
+          );
+          categoryMessage += "`";
+          return categoryMessage;
+        })
+      );
+      textMesssage += expensesDetails.join("\n");
+      textMesssage += `\n\n`;
+      let totalSavings = await fetchBalanceByMonth(
+        query.message.chat.id,
+        selectedMonth + 1,
+        "AHORROS"
+      );
+      textMesssage += "💰 *Ahorros del mes* `";
+      textMesssage += await numberFormater(
+        totalSavings,
+        currentUser.currency
+      )
+      textMesssage += "`\n"
+      await optionsEdit(
+        textMesssage,
+        query.message.chat.id,
+        bot,
+        [[{ text: "Regresar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      return;
+      */
       return;
     default:
       console.log(query.data);
@@ -1407,121 +1632,7 @@ export default async function handleUserQueries(
       );
 
       return;
-    case "see_balance_details-btn":
-      textMesssage = "";
-      await optionsEdit(
-        "Estoy cargando la informacion",
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      textMesssage += `*Detalles de las transacciones en el mes de ${await getMonthString(
-        String(selectedMonth + 1)
-      )}*\n\n🟢 *Ingresos totales:* `;
-      textMesssage += "`";
-      let totalAmmount = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "INGRESO"
-      );
-      textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\n";
-      const incomeCategories = await fetchAllUserCategories(
-        currentUser.id,
-        "INGRESO"
-      );
-      const expenseCategories = await fetchAllUserCategories(
-        currentUser.id,
-        "EGRESO"
-      );
-      let tempMessage = "";
-      let initialBalance = await fetchInitialBalance(
-        currentUser.id,
-        selectedMonth + 1
-      );
-      if (initialBalance > 0) {
-        tempMessage += "- *Balance Inicial*: `";
-        tempMessage += await numberFormater(
-          initialBalance,
-          currentUser.currency
-        );
-        tempMessage += "`\n";
-        textMesssage += tempMessage;
-      }
-      tempMessage = "";
-      const incomeDetails = await Promise.all(
-        incomeCategories.map(async (category) => {
-          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
-            currentUser.id,
-            category.id,
-            selectedMonth + 1
-          );
-          let categoryMessage = `- *${category.name}*:`;
-          categoryMessage += "` ";
-          categoryMessage += await numberFormater(
-            totalAmmountbyMonth,
-            currentUser.currency
-          );
-          categoryMessage += "`";
-          return categoryMessage;
-        })
-      );
-      textMesssage += incomeDetails.join("\n");
-      textMesssage += `\n\n`;
-      await optionsEdit(
-        "No te vayas, sigo calculando...",
-        query.message.chat.id,
-        bot,
-        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      textMesssage += "🔴 Gastos totales: `";
-      totalAmmount = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "EGRESO"
-      );
-      textMesssage += `${totalAmmount}`;
-      textMesssage += "`\n\n";
-      const expensesDetails = await Promise.all(
-        expenseCategories.map(async (category) => {
-          const totalAmmountbyMonth = await fetchAmmountByCategoriesandMonth(
-            currentUser.id,
-            category.id,
-            selectedMonth + 1
-          );
-          let categoryMessage = `- *${category.name}*:`;
-          categoryMessage += "` ";
-          categoryMessage += await numberFormater(
-            totalAmmountbyMonth,
-            currentUser.currency
-          );
-          categoryMessage += "`";
-          return categoryMessage;
-        })
-      );
-      textMesssage += expensesDetails.join("\n");
-      textMesssage += `\n\n`;
-      let totalSavings = await fetchBalanceByMonth(
-        query.message.chat.id,
-        selectedMonth + 1,
-        "AHORROS"
-      );
-      textMesssage += "💰 *Ahorros del mes* `";
-      textMesssage += await numberFormater(
-        totalSavings,
-        currentUser.currency
-      )
-      textMesssage += "`\n"
-      await optionsEdit(
-        textMesssage,
-        query.message.chat.id,
-        bot,
-        [[{ text: "Regresar", callback_data: "back_to_menu_btn" }]],
-        messageId
-      );
-      return;
+    
     default:
       if (query.data.startsWith("category-selection-option")) {
         newUserRecord.category = query.data.split(":")[1];
