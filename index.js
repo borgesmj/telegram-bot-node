@@ -14,7 +14,7 @@ const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 app.set("views", join(__dirname, "src/views"));
 app.set("view engine", "ejs");
-app.use(express.static(join(__dirname, "public")));
+app.use(express.static(join(__dirname, "src/public")));
 app.use(indexRoutes);
 const port = parseInt(process.env.PORT) || process.argv[3] || 3000;
 app.listen(port, () => {
