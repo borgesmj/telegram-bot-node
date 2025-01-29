@@ -128,7 +128,7 @@ export const botReplies = [
   // ! 59
   "🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`",
   // ! 60
-  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.",
+  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.\n\nversion: `1.0.0`",
   //!61
   "💖 *¡Apóyame!*\nSi te gusta mi trabajo y quieres contribuir al proyecto, puedes hacer un aporte en mi página de donaciones. ¡Tu apoyo es fundamental para seguir mejorando!",
   // ! 62
