@@ -370,12 +370,44 @@ export default async function handleUserMessages(
       }
       await userManager.setEditProfile(chatId, {
         ...userManager.getEditProfile(chatId),
-        name: msg.text
-      })
-      await userManager.setUserStatus(chatId, "waiting_for_confimation")
-      inline_keyboard = [[{text: "Confirmar", callback_data: "confirm_add_new_category_btn" }], [{text: "Cancelar", callback_data: "back_to_menu_btn"}]]
-      newTextMessage = botReplies[57].replace("$category", msg.text).replace("$type", userManager.getEditProfile(chatId).type)
-      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard)
+        name: msg.text,
+      });
+      await userManager.setUserStatus(chatId, "waiting_for_confimation");
+      inline_keyboard = [
+        [{ text: "Confirmar", callback_data: "confirm_add_new_category_btn" }],
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      newTextMessage = botReplies[57]
+        .replace("$category", msg.text)
+        .replace("$type", userManager.getEditProfile(chatId).type);
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_new_savings_withdraw":
+      inputNumber = await validateIsNumber(msg.text);
+      if (!inputNumber.success) {
+        await messageSender.sendTextMessage(chatId, inputNumber.error, []);
+        return;
+      }
+      const negativeAmmount = -inputNumber.ammount;
+      await userManager.setUserTransaction(chatId, {
+        user_id: currentUser.id,
+        ammount: negativeAmmount
+      });
+      userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      inline_keyboard = [
+        [
+          {
+            text: "Confirmar",
+            callback_data: "confirm_new_savings_withdraw_btn",
+          },
+        ],
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      newTextMessage = botReplies[63].replace(
+        "$ammount",
+        await numberFormater(inputNumber.ammount, currentUser.currency)
+      );
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
       return;
     default:
       break;

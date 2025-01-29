@@ -8,6 +8,7 @@ import {
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchInitialBalance,
+  fetchSavings,
   fetchTransactionById,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
@@ -540,10 +541,7 @@ export default async function handleUserQueries(
       );
       return;
     case "see_total_savings_btn":
-      totalSavings = await fetchTransactionsAndBalance(
-        currentUser.id,
-        "AHORROS"
-      );
+      totalSavings = await fetchSavings(currentUser.id)
       newTextMessage = botReplies[35].replace(
         "$ammount",
         await numberFormater(totalSavings, currentUser.currency)
@@ -1123,6 +1121,40 @@ export default async function handleUserQueries(
           },
         ],
       ]);
+      return;
+    case "savings_withdraw_btn":
+      messageSender.editTextMessage(
+        chatId,
+        botReplies[62],
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      userManager.setUserStatus(chatId, "waiting_for_new_savings_withdraw");
+      return;
+    case "confirm_new_savings_withdraw_btn":
+      userManager.setUserTransaction(chatId, {
+        ...userManager.getUserTransaction(chatId),
+        created_at: adjustToLocalTime(new Date()),
+      });
+      confirmTransaction = await createNewSaving(
+        userManager.getUserTransaction(chatId)
+      );
+      if (!confirmTransaction.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          confirmTransaction.error,
+          []
+        );
+        return;
+      }
+      await messageSender.sendTextMessage(
+        chatId,
+        "Transaccion exitosa. Disfruta de tus ahorros",
+        []
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await userManager.setUserTransaction(chatId, {});
+      await messageSender.sendMenu(chatId);
       return;
     default:
       console.log(query.data);

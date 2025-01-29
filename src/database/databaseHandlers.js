@@ -411,3 +411,18 @@ export async function fetchInitialBalance(userId, month) {
     console.log(error);
   }
 }
+
+export async function fetchSavings(userId) {
+  let totalAmmount = 0
+  try {
+    const { data, error } = await supabase
+      .from("savings")
+      .select("ammount")
+      .eq("user_id", userId);
+    if (error) {
+      throw error;
+    }
+    totalAmmount = data.reduce((acc, cur) => acc + cur.ammount, 0);
+    return totalAmmount
+  } catch (error) {}
+}
