@@ -10,6 +10,9 @@ import {
   fetchInitialBalance,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
+  fetchUserCategories,
+  insertNewTransactionCategory,
+  updateUserCategory,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
@@ -36,6 +39,7 @@ export default async function handleUserQueries(
   let totalSavings = 0;
   let tempAmmount = 0;
   let editProfileStatus = null;
+  let userCategories = [];
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -882,6 +886,178 @@ export default async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 500));
       await messageSender.sendMenu(chatId);
       return;
+    case "edit_categories_btn":
+      inline_keyboard = [
+        [
+          {
+            text: "Editar",
+            callback_data: "edit_exist_category_btn",
+          },
+          { text: "Agregar", callback_data: "add_new_category_btn" },
+        ],
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[49],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_exist_category_btn":
+      inline_keyboard = [
+        [
+          { text: "Ingreso", callback_data: "edit_income_categories_btn" },
+          { text: "Egreso", callback_data: "edit_expenses_categories_btn" },
+        ],
+        [{ text: "cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[50],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_income_categories_btn":
+      inline_keyboard = [];
+      tempRow = [];
+      userCategories = await fetchUserCategories(
+        query.message.chat.id,
+        "INGRESO"
+      );
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: `category-edit-selection-option:${category.name}`,
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[51],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_expenses_categories_btn":
+      inline_keyboard = [];
+      tempRow = [];
+      userCategories = await fetchUserCategories(
+        query.message.chat.id,
+        "EGRESO"
+      );
+      userCategories.forEach((category, index) => {
+        tempRow.push({
+          text: category.name,
+          callback_data: `category-edit-selection-option:${category.name}`,
+        });
+        if (tempRow.length === 2 || index === userCategories.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([
+        {
+          text: "Cancelar",
+          callback_data: "back_to_menu_btn",
+        },
+      ]);
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[51],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "confirm_category_edit_btn":
+      editProfileStatus = await updateUserCategory(
+        userManager.getEditProfile(chatId)
+      );
+      if (!editProfileStatus.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          editProfileStatus.error,
+          []
+        );
+        return;
+      }
+      await messageSender.sendTextMessage(chatId, botReplies[54], []);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await userManager.setEditProfile(chatId, {});
+      await messageSender.sendMenu(chatId);
+      return;
+    case "add_new_category_btn":
+      inline_keyboard = [
+        [
+          { text: "Ingreso", callback_data: "add_new_income_category_btn" },
+          { text: "Egreso", callback_data: "add_new_expense_category_btn" },
+        ],
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[55],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "add_new_income_category_btn":
+      userManager.setEditProfile(chatId, {
+        type: "INGRESO",
+        user_id: currentUser.id,
+      });
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[56],
+        inline_keyboard,
+        messageId
+      );
+      await userManager.setUserStatus(chatId, "waiting_for_new_category");
+      return;
+    case "add_new_expense_category_btn":
+      userManager.setEditProfile(chatId, {
+        type: "EGRESO",
+        user_id: currentUser.id,
+      });
+      inline_keyboard = [
+        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[56],
+        inline_keyboard,
+        messageId
+      );
+      await userManager.setUserStatus(chatId, "waiting_for_new_category");
+      return;
+    case "confirm_add_new_category_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const addNewCategory = await insertNewTransactionCategory(
+        userManager.getEditProfile(chatId)
+      );
+      if (!addNewCategory.success) {
+        await messageSender(query.message.chat.id, addNewCategory.error, bot);
+      }
+      await messageSender.sendTextMessage(chatId, botReplies[58].replace("$category", userManager.getEditProfile(chatId).name), [])
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await userManager.setEditProfile(chatId, {})
+      await messageSender.sendMenu(chatId)
+      return;
     default:
       console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {
@@ -983,8 +1159,24 @@ export default async function handleUserQueries(
         }
         /**
          */
+      } else if (query.data.startsWith("category-edit-selection-option")) {
+        let categoryName = query.data.split(":")[1];
+        inline_keyboard = [
+          [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
+        ];
+        await userManager.setUserStatus(chatId, "waiting_for_category_edit");
+        await messageSender.editTextMessage(
+          chatId,
+          botReplies[52].replace("$category", categoryName),
+          inline_keyboard,
+          messageId
+        );
+        await userManager.setEditProfile(chatId, {
+          oldName: categoryName,
+          user_id: currentUser.id,
+        });
+        return;
       }
-      return;
   }
 }
 /**
@@ -1087,155 +1279,9 @@ export default async function handleUserQueries(
         messageId
       );
       return;
-    case "add_new_category_btn":
-      inline_keyboard = [
-        [
-          { text: "Ingreso", callback_data: "add_new_income_category_btn" },
-          { text: "Egreso", callback_data: "add_new_expense_category_btn" },
-        ],
-        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      await optionsEdit(
-        botReplies[37],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "add_new_income_category_btn":
-      newUserCategory.type = "INGRESO";
-      newUserCategory.user_id = currentUser.id;
-      inline_keyboard = [
-        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      await optionsEdit(
-        botReplies[36],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_NEW_CATEGORY,
-      };
-      return;
-    case "add_new_expense_category_btn":
-      newUserCategory.type = "EGRESO";
-      newUserCategory.user_id = currentUser.id;
-      inline_keyboard = [
-        [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      await optionsEdit(
-        botReplies[36],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_NEW_CATEGORY,
-      };
-      return;
-    case "confirm_add_new_category_btn":
-      if (
-        userStates[query.message.chat.id].state !== "waiting_for_confirmation"
-      ) {
-        return;
-      }
-      const addNewCategory = await insertNewTransactionCategory(
-        newUserCategory
-      );
-      if (!addNewCategory.success) {
-        await messageSender(query.message.chat.id, addNewCategory.error, bot);
-      }
-      await messageSender(
-        query.message.chat.id,
-        botReplies[39].replace("$category", newUserCategory.name),
-        bot
-      );
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      await sendMenu(query.message.chat.id, bot);
-      newUserCategory = {};
-      return;
-    case "edit_exist_category_btn":
-      inline_keyboard = [
-        [
-          { text: "Ingreso", callback_data: "edit_income_categories_btn" },
-          { text: "Egreso", callback_data: "edit_expenses_categories_btn" },
-        ],
-        [{ text: "cancelar", callback_data: "back_to_menu_btn" }],
-      ];
-      optionsEdit(
-        botReplies[40],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "edit_income_categories_btn":
-      inline_keyboard = [];
-      tempRow = [];
-      userCategories = await fetchUserCategories(
-        query.message.chat.id,
-        "INGRESO"
-      );
-      userCategories.forEach((category, index) => {
-        tempRow.push({
-          text: category.name,
-          callback_data: `category-edit-selection-option:${category.name}`,
-        });
-        if (tempRow.length === 2 || index === userCategories.length - 1) {
-          inline_keyboard.push(tempRow);
-          tempRow = [];
-        }
-      });
-      inline_keyboard.push([
-        {
-          text: "Cancelar",
-          callback_data: "back_to_menu_btn",
-        },
-      ]);
-      optionsEdit(
-        botReplies[41],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
-    case "edit_expenses_categories_btn":
-      inline_keyboard = [];
-      tempRow = [];
-      userCategories = await fetchUserCategories(
-        query.message.chat.id,
-        "EGRESO"
-      );
-      userCategories.forEach((category, index) => {
-        tempRow.push({
-          text: category.name,
-          callback_data: `category-edit-selection-option:${category.name}`,
-        });
-        if (tempRow.length === 2 || index === userCategories.length - 1) {
-          inline_keyboard.push(tempRow);
-          tempRow = [];
-        }
-      });
-      inline_keyboard.push([
-        {
-          text: "Cancelar",
-          callback_data: "back_to_menu_btn",
-        },
-      ]);
-      optionsEdit(
-        botReplies[41],
-        query.message.chat.id,
-        bot,
-        inline_keyboard,
-        messageId
-      );
-      return;
+    
+    
+    
     case "confirm_edit_category_name":
       if (
         userStates[query.message.chat.id].state !== "waiting_for_confirmation"
@@ -1252,23 +1298,7 @@ export default async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 200));
       await sendMenu(query.message.chat.id, bot);
       return;
-      } else if (query.data.startsWith("category-edit-selection-option")) {
-        let categoryName = query.data.split(":")[1];
-        inline_keyboard = [
-          [{ text: "Cancelar", callback_data: "back_to_menu_btn" }],
-        ];
-        userStates[query.message.chat.id] = {
-          state: STATES.WAITING_FOR_CATEGORY_EDIT,
-        };
-        optionsEdit(
-          botReplies[42].replace("$category", categoryName),
-          query.message.chat.id,
-          bot,
-          inline_keyboard,
-          messageId
-        );
-        editCategoryObject.oldName = categoryName;
-        editCategoryObject.user_id = currentUser.id;
+      } 
       } else if (query.data.startsWith("details-transaction")) {
         const transactionId = query.data.split(":")[1];
         const transactionDetails = await fetchTransactionById(transactionId);

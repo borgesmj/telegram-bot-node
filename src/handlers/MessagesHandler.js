@@ -343,6 +343,40 @@ export default async function handleUserMessages(
       );
       await userManager.setUserStatus(chatId, "waiting_for_confirmation");
       return;
+    case "waiting_for_category_edit":
+      inputText = await validateText(msg.text);
+      if (!inputText.success) {
+        await messageSender(msg.from.id, inputText.error, bot);
+      }
+      userManager.setEditProfile(chatId, {
+        ...userManager.getEditProfile(chatId),
+        newName: msg.text,
+      });
+      userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      (newTextMessage = botReplies[53]
+        .replace("$oldname", userManager.getEditProfile(chatId).oldName)
+        .replace("$newname", userManager.getEditProfile(chatId).newName)),
+        (inline_keyboard = [
+          [{ text: "Confirmar", callback_data: "confirm_category_edit_btn" }],
+          [{ text: "Cancelar", callback_data: "my_profile" }],
+        ]);
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
+    case "waiting_for_new_category":
+      inputText = await validateText(msg.text);
+      if (!inputText.success) {
+        await messageSender(msg.from.id, inputText.error, bot);
+        return;
+      }
+      await userManager.setEditProfile(chatId, {
+        ...userManager.getEditProfile(chatId),
+        name: msg.text
+      })
+      await userManager.setUserStatus(chatId, "waiting_for_confimation")
+      inline_keyboard = [[{text: "Confirmar", callback_data: "confirm_add_new_category_btn" }], [{text: "Cancelar", callback_data: "back_to_menu_btn"}]]
+      newTextMessage = botReplies[57].replace("$category", msg.text).replace("$type", userManager.getEditProfile(chatId).type)
+      messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard)
+      return;
     default:
       break;
   }
@@ -585,39 +619,8 @@ export default async function handleUserMessages(
         msg.from.id
       );
       return;
-    case "waiting_for_new_category":
-      const validateNewCategory = await validateText(msg.text);
-      if (!validateNewCategory.success) {
-        await messageSender(msg.from.id, validateNewCategory.error, bot);
-        return;
-      }
-      newUserCategory.name = msg.text;
-      userStates[msg.from.id] = { state: STATES.WAITING_FOR_CONFIRMATION };
-      sendConfirmation(
-        botReplies[38]
-          .replace("$category", msg.text)
-          .replace("$type", newUserCategory.type),
-        "confirm_add_new_category_btn",
-        bot,
-        msg.from.id
-      );
-      return;
-    case "waiting_for_category_edit":
-      const validateEditCategory = await validateText(msg.text);
-      if (!validateEditCategory.success) {
-        await messageSender(msg.from.id, validateEditCategory.error, bot);
-      }
-      editCategoryObject.newName = msg.text;
-      userStates[msg.from.id] = { state: STATES.WAITING_FOR_CONFIRMATION };
-      sendConfirmation(
-        botReplies[43]
-          .replace("$oldname", editCategoryObject.oldName)
-          .replace("$newname", editCategoryObject.newName),
-        "confirm_edit_category_name",
-        bot,
-        msg.from.id
-      );
-      return;
+    
+    
     default:
       break;
   }

@@ -104,5 +104,25 @@ export const botReplies = [
   // ! 47
   "Tu perfil fué actualizado con éxito",
   // ! 48
-"🤖\n\nTu username lo tomé de tu perfil de telegram, asi que yo me encargo de esta 😉"
+"🤖\n\nTu username lo tomé de tu perfil de telegram, asi que yo me encargo de esta 😉",
+// ! 49
+"🤖\n\n¿Que quieres hacer?\n¿*Editar* una categoria ya existente o *agregar* una nueva?",
+// ! 50
+"🤖\n\n¿Cuales categorias quieres editar? ¿Ingreso o egreso?",
+// ! 51
+"🤖\n\nSelecciona la categoría que quieras editar",
+// ! 52
+"🤖\n\n¿Como quieres llamar ahora a la categoria $category?",
+// ! 53
+"🤖\n\nConfirma cambiar el nombre de *$oldname* ➡️ a *$newname*",
+// !54
+"🤖\n\nNombre cambiado con exito!!!",
+// ! 55
+"🤖\n\n¿En donde lo quieres almacenar?\n\n¿Ingreso o egreso?",
+// ! 56
+"🤖\n\nVamos a agregar una categoria nueva, por favor escribe el nombre de la categoria nueva y haces click en el botón de *enviar*",
+// ! 57
+"🤖\n\nConfirma que quieres agregar *$category*, para *$type*",
+// ! 58
+"🤖\n\n👍 $category fué agregada con exito.",
 ];
