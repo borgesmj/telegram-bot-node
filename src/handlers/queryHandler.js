@@ -514,6 +514,9 @@ export default async function handleUserQueries(
         currentUser.id,
         "AHORROS"
       );
+      const savingsHistoricBalance = await fetchSavings(
+        currentUser.id,
+      );
       const generalBalance = incomeBalance - expenseBalance - savingsBalance;
       newTextMessage = botReplies[34]
         .replace(
@@ -526,7 +529,7 @@ export default async function handleUserQueries(
         )
         .replace(
           "$savings",
-          await numberFormater(savingsBalance, currentUser.currency)
+          await numberFormater(savingsHistoricBalance, currentUser.currency)
         )
         .replace(
           "$balance",
@@ -541,7 +544,7 @@ export default async function handleUserQueries(
       );
       return;
     case "see_total_savings_btn":
-      totalSavings = await fetchSavings(currentUser.id)
+      totalSavings = await fetchSavings(currentUser.id);
       newTextMessage = botReplies[35].replace(
         "$ammount",
         await numberFormater(totalSavings, currentUser.currency)
@@ -1072,7 +1075,7 @@ export default async function handleUserQueries(
           [
             {
               text: "Quiero apoyar el proyecto 💖",
-              url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+              callback_data: "donate_btn",
             },
           ],
           [
@@ -1111,7 +1114,7 @@ export default async function handleUserQueries(
         [
           {
             text: "Quiero apoyar el proyecto 💖",
-            url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+            callback_data: "donate_btn",
           },
         ],
         [
@@ -1155,6 +1158,18 @@ export default async function handleUserQueries(
       await new Promise((resolve) => setTimeout(resolve, 300));
       await userManager.setUserTransaction(chatId, {});
       await messageSender.sendMenu(chatId);
+      return;
+    case "donate_btn":
+      inline_keyboard = [
+        [
+          {
+            text: "Ir a la página de donación",
+            url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+          },
+        ],
+        [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(chatId, botReplies[64], inline_keyboard, messageId);
       return;
     default:
       console.log(query.data);

@@ -68,7 +68,7 @@ export const botReplies = [
   // ! 33
   "🤖\n\nDisculpa, no hay movimientos guardados para el mes de $month del $currentYear",
   // ! 34
-  "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
+  "🤖\n\nResumen histórico de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo actual:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
   // ! 35
   "🤖\n\nHasta ahora tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo.",
   // ! 36
@@ -134,5 +134,7 @@ export const botReplies = [
   // ! 62
   "¿Vamos a retirar de los ahorros?\n\nBueno, para eso es que guardamos ese dinero.\n\nDame la cantidad:",
   // ! 63
-  "¿Confirmas el retiro del monto `$ammount` de tus ahorros?"
+  "¿Confirmas el retiro del monto `$ammount` de tus ahorros?",
+  // ! 64
+  "🤖 ¡Gracias por tu apoyo!\n\nEstamos muy agradecidos por querer colaborar. Con tu aporte, podremos mejorar este proyecto y desarrollar muchos más en el futuro.\n\nPara apoyarnos:\n1️⃣ Haz clic en el enlace de abajo.\n2️⃣ Completa el proceso indicado.\n3️⃣ Toma una captura de pantalla del comprobante y envíamela por este chat.\n\n¡Mil gracias! ❤️🙏"
 ];
