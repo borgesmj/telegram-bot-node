@@ -8,6 +8,7 @@ import {
   fetchBalanceByMonth,
   fetchCurrentUser,
   fetchInitialBalance,
+  fetchTransactionById,
   fetchTransactionsAndBalance,
   fetchTransactionsList,
   fetchUserCategories,
@@ -1053,10 +1054,17 @@ export default async function handleUserQueries(
       if (!addNewCategory.success) {
         await messageSender(query.message.chat.id, addNewCategory.error, bot);
       }
-      await messageSender.sendTextMessage(chatId, botReplies[58].replace("$category", userManager.getEditProfile(chatId).name), [])
+      await messageSender.sendTextMessage(
+        chatId,
+        botReplies[58].replace(
+          "$category",
+          userManager.getEditProfile(chatId).name
+        ),
+        []
+      );
       await new Promise((resolve) => setTimeout(resolve, 200));
-      await userManager.setEditProfile(chatId, {})
-      await messageSender.sendMenu(chatId)
+      await userManager.setEditProfile(chatId, {});
+      await messageSender.sendMenu(chatId);
       return;
     default:
       console.log(query.data);
@@ -1176,7 +1184,49 @@ export default async function handleUserQueries(
           user_id: currentUser.id,
         });
         return;
+      } else if (query.data.startsWith("details-transaction")) {
+        const transactionId = query.data.split(":")[1];
+        const transactionDetails = await fetchTransactionById(transactionId);
+        if (!transactionDetails) {
+          await messageSender(
+            query.message.chat.id,
+            "Lo siento, no pude encontrar ese movimiento, trata de consultar con soporte",
+            bot
+          );
+        }
+        const { record_type, detalles, monto, categories, created_at } =
+          transactionDetails[0];
+        const options = {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: true,
+        };
+        const dateTimeFormatter = new Intl.DateTimeFormat("es-CO", options);
+        const formatDate = await dateTimeFormatter.format(new Date(created_at));
+        newTextMessage = botReplies[59]
+          .replace("$details", detalles)
+          .replace("$category", categories.name)
+          .replace("$type", record_type)
+          .replace(
+            "$ammount",
+            await numberFormater(monto, currentUser.currency)
+          )
+          .replace("$date", formatDate);
+        inline_keyboard = [
+          [{ text: "Regresar", callback_data: "see_records_list" }],
+        ];
+        await messageSender.editTextMessage(
+          chatId,
+          newTextMessage,
+          inline_keyboard,
+          messageId
+        );
       }
+      return;
   }
 }
 /**
@@ -1299,47 +1349,7 @@ export default async function handleUserQueries(
       await sendMenu(query.message.chat.id, bot);
       return;
       } 
-      } else if (query.data.startsWith("details-transaction")) {
-        const transactionId = query.data.split(":")[1];
-        const transactionDetails = await fetchTransactionById(transactionId);
-        if (!transactionDetails) {
-          await messageSender(
-            query.message.chat.id,
-            "Lo siento, no pude encontrar ese movimiento, trata de consultar con soporte",
-            bot
-          );
-        }
-        const { record_type, detalles, monto, categories } =
-          transactionDetails[0];
-        const formatedDate = adjustToLocalTime(
-          transactionDetails[0].created_at
-        );
-        const day = formatedDate.getDate();
-        const month = formatedDate.getMonth();
-        const year = formatedDate.getFullYear();
-        const hours = formatedDate.getHours();
-        const minutes = formatedDate.getMinutes();
-        textMesssage = botReplies[45]
-          .replace("$details", detalles)
-          .replace("$category", categories.name)
-          .replace("$type", record_type)
-          .replace(
-            "$ammount",
-            await numberFormater(monto, currentUser.currency)
-          )
-          .replace("$date", `${day}/${month + 1}/${year}, ${hours}:${minutes}`);
-        inline_keyboard = [
-          [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
-        ];
-        await optionsEdit(
-          textMesssage,
-          query.message.chat.id,
-          bot,
-          inline_keyboard,
-          messageId
-        );
-      }
-      return;
+      } 
   }
   console.log("query data: ", query.data);
 }

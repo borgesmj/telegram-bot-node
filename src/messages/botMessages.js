@@ -125,4 +125,6 @@ export const botReplies = [
 "🤖\n\nConfirma que quieres agregar *$category*, para *$type*",
 // ! 58
 "🤖\n\n👍 $category fué agregada con exito.",
+// ! 59
+"🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`"
 ];
