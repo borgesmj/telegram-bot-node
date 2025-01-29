@@ -29,7 +29,32 @@ const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 const messageSender = new MessageSender(bot);
 let currentUser = {};
 // Filtrado de mensajes normales
-//userManager.setUserStatus(896160399, "waiting_for_initial_savings")
+bot.on("photo", async (msg) => {
+  const photo = msg.photo;
+  const fileId = photo[photo.length - 1].file_id;
+  const senderId = msg.from.id;
+  const adminId = process.env.ADMIN_ID;
+
+  try {
+    await bot.sendPhoto(adminId, fileId);
+    messageSender.sendTextMessage(senderId, "Imagen recibida con exito", []);
+    messageSender.sendTextMessage(
+      adminId,
+      `Imagen recibida de: ${senderId}`,
+      []
+    );
+    messageSender.sendMenu(senderId);
+  } catch (error) {
+    messageSender.sendTextMessage(
+      senderId,
+      "Error enviando la imagen. Por favor enviala por correo electronico a borgesmj19@gmail.com",
+      []
+    );
+    console.error("Error al reenviar la imagen:", error.message);
+    console.error("Detalles del error:", error);
+  }
+});
+
 bot.on("message", async (msg) => {
   if (msg.text && msg.text.startsWith("/")) {
     return;
