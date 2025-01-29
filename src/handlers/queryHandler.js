@@ -707,13 +707,13 @@ export default async function handleUserQueries(
       inline_keyboard = [
         [
           {
-            text: "Editar Perfil",
+            text: "✏️ Editar",
             callback_data: "edit_profile",
           },
         ],
         [
           {
-            text: "⏪ Regresar al menú principal",
+            text: "🔙 Regresar al menú principal",
             callback_data: "back_to_menu_btn",
           },
         ],
@@ -724,7 +724,6 @@ export default async function handleUserQueries(
         dec_email: decryptText(email),
         dec_telegram_username: decryptText(telegram_username),
       };
-      console.log(decriptedProfile);
       const {
         dec_first_name,
         dec_last_name,
@@ -736,7 +735,8 @@ export default async function handleUserQueries(
         .replace("$userLastName", dec_last_name || "")
         .replace("$userEmail", dec_email)
         .replace("$username", dec_telegram_username)
-        .replace("$userCurrency", currentUser.currency);
+        .replace("$userCurrency", currentUser.currency)
+        .replace("$tier", currentUser.subscriptionLevel === "free" ? "🆓 Gratuito" : currentUser.subscriptionLevel === "tier1" ? "⭐ Estandar" : "💎 Premium");
         messageSender.editTextMessage(chatId, newTextMessage, inline_keyboard, messageId)
       return;
     default:
