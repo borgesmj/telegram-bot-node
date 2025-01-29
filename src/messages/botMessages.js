@@ -98,5 +98,11 @@ export const botReplies = [
   📱 *Telegram:* @$username 
   💲 *Moneda predeterminada:* $userCurrency
   🏷️ *Suscripción*: $tier
-  `
+  `,
+  // ! 46
+  "Seguro que quieres cambiar tu $category de $oldname a ➡ $newname",
+  // ! 47
+  "Tu perfil fué actualizado con éxito",
+  // ! 48
+"🤖\n\nTu username lo tomé de tu perfil de telegram, asi que yo me encargo de esta 😉"
 ];

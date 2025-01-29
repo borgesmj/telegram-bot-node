@@ -189,19 +189,26 @@ export async function createNewSaving(newSaving) {
   }
 }
 
-export async function editProfile(editProfileObject, chatId) {
+export async function editProfile(editProfileObject, user_id) {
   const { category, value } = editProfileObject;
   try {
-    // ! pendiente hacer update de user
-    const updateData = { [category]: value };
-    const userId = await fetchCurrentUserId(chatId);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("users")
-      .update(updateData)
-      .eq("id", userId);
+      .update({ [category]: value })
+      .eq("id", user_id)
+      .select();
+
     if (error) {
       throw error;
     }
+
+    if (data.length === 0) {
+      return {
+        success: false,
+        error: "No se encontró el usuario con el ID proporcionado",
+      };
+    }
+
     return { success: true, error: "" };
   } catch (error) {
     console.log(error);

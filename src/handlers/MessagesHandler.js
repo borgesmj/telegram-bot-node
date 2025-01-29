@@ -11,6 +11,7 @@ import {
   validateText,
 } from "../utils/validators.js";
 import numberFormater from "../utils/numberFormater.js";
+import { decryptText } from "../helpers/encryptText.js";
 export default async function handleUserMessages(
   msg,
   userManager,
@@ -308,6 +309,39 @@ export default async function handleUserMessages(
         confirmationMessage,
         inline_keyboard
       );
+      return;
+    case "waiting_for_new_profile_data":
+      inputText = await validateText(msg.text);
+      if (!inputText.success) {
+        await messageSender.sendTextMessage(chatId, inputText.error, []);
+        return;
+      }
+      await userManager.setEditProfile(chatId, {
+        ...userManager.getEditProfile(chatId),
+        value: msg.text,
+      });
+      let editCategory = await userManager.getEditProfile(chatId).category;
+      newTextMessage = botReplies[46]
+        .replace("$oldname", await decryptText(currentUser[editCategory] || ""))
+        .replace("$newname", msg.text)
+        .replace(
+          "$category",
+          editCategory === "first_name"
+            ? "nombre"
+            : editCategory === "last_name"
+            ? "apellido"
+            : "correo"
+        );
+      inline_keyboard = [
+        [{ text: "Confirmar", callback_data: "confirm_new_profile_data_btn" }],
+        [{ text: "Cancelar", callback_data: "my_profile" }],
+      ];
+      await messageSender.sendTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard
+      );
+      await userManager.setUserStatus(chatId, "waiting_for_confirmation");
       return;
     default:
       break;

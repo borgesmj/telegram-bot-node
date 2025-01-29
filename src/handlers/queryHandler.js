@@ -2,6 +2,7 @@ import {
   createNewRecord,
   createNewSaving,
   createNewUser,
+  editProfile,
   fetchAllUserCategories,
   fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
@@ -14,7 +15,7 @@ import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
-import { decryptText } from "../helpers/encryptText.js";
+import { decryptText, encrypText } from "../helpers/encryptText.js";
 
 export default async function handleUserQueries(
   query,
@@ -34,6 +35,7 @@ export default async function handleUserQueries(
   let selectedMonth = 0;
   let totalSavings = 0;
   let tempAmmount = 0;
+  let editProfileStatus = null;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -736,8 +738,149 @@ export default async function handleUserQueries(
         .replace("$userEmail", dec_email)
         .replace("$username", dec_telegram_username)
         .replace("$userCurrency", currentUser.currency)
-        .replace("$tier", currentUser.subscriptionLevel === "free" ? "🆓 Gratuito" : currentUser.subscriptionLevel === "tier1" ? "⭐ Estandar" : "💎 Premium");
-        messageSender.editTextMessage(chatId, newTextMessage, inline_keyboard, messageId)
+        .replace(
+          "$tier",
+          currentUser.subscriptionLevel === "free"
+            ? "🆓 Gratuito"
+            : currentUser.subscriptionLevel === "tier1"
+            ? "⭐ Estandar"
+            : "💎 Premium"
+        );
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_profile":
+      inline_keyboard = [
+        [
+          {
+            text: "Nombre",
+            callback_data: "edit_firstname_btn",
+          },
+        ],
+        [
+          {
+            text: "Apellido",
+            callback_data: "edit_lastname_btn",
+          },
+        ],
+        [
+          {
+            text: "Email",
+            callback_data: "edit_email_btn",
+          },
+        ],
+        [
+          {
+            text: "Categorías",
+            callback_data: "edit_categories_btn",
+          },
+        ],
+        [
+          {
+            text: "Actualizar username",
+            callback_data: "edit_username_btn",
+          },
+        ],
+        [{ text: "Actualizar plan", callback_data: "upgrade_plan_btn" }],
+        [
+          {
+            text: "⏪ Regresar a mi perfil",
+            callback_data: "my_profile",
+          },
+        ],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        "*Elige la opción que desees editar:*",
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "edit_firstname_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_new_profile_data");
+      await userManager.setEditProfile(chatId, { category: "first_name" });
+      await messageSender.editTextMessage(
+        chatId,
+        "Enviame el nuevo nombre como quieres que te llame",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      return;
+    case "edit_lastname_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_new_profile_data");
+      await userManager.setEditProfile(chatId, { category: "last_name" });
+      await messageSender.editTextMessage(
+        chatId,
+        "Enviame el nuevo apellido como quieres que te llame",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      return;
+    case "edit_email_btn":
+      await userManager.setUserStatus(chatId, "waiting_for_new_profile_data");
+      await userManager.setEditProfile(chatId, { category: "email" });
+      await messageSender.editTextMessage(
+        chatId,
+        "Enviame el nuevo correo electronico que quieres que tenga",
+        [[{ text: "Cancelar", callback_data: "back_to_menu_btn" }]],
+        messageId
+      );
+      return;
+    case "edit_username_btn":
+      await userManager.setEditProfile(chatId, {
+        category: "telegram_username",
+        value: await encrypText(query.from.username, currentUser.user_iv),
+      });
+
+      editProfileStatus = await editProfile(
+        userManager.getEditProfile(chatId),
+        currentUser.id
+      );
+      if (!editProfileStatus.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          editProfileStatus.error,
+          []
+        );
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[48], []);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendMenu(chatId);
+      return;
+    case "confirm_new_profile_data_btn":
+      if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      }
+      const newValue = await encrypText(
+        await userManager.getEditProfile(chatId).value,
+        currentUser.user_iv
+      );
+      await userManager.setEditProfile(chatId, {
+        ...userManager.getEditProfile(chatId),
+        value: newValue,
+      });
+      editProfileStatus = await editProfile(
+        userManager.getEditProfile(chatId),
+        currentUser.id
+      );
+      if (!editProfileStatus.success) {
+        await messageSender.sendTextMessage(
+          chatId,
+          editProfileStatus.error,
+          []
+        );
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendTextMessage(chatId, botReplies[47], []);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await messageSender.sendMenu(chatId);
       return;
     default:
       console.log(query.data);
@@ -884,26 +1027,7 @@ export default async function handleUserQueries(
         messageId
       );
       return;
-    case "edit_name_btn":
-      userStates[query.message.chat.id] = {
-        state: STATES.WAITING_FOR_EDIT_PROFILE,
-      };
-      editProfileObject.category = "first_name";
-      await optionsEdit(
-        "Ingresa tu nuevo nombre:",
-        chatId,
-        bot,
-        [
-          [
-            {
-              text: "Cancelar",
-              callback_data: "edit_profile",
-            },
-          ],
-        ],
-        messageId
-      );
-      return;
+    
     case "edit_lastname_btn":
       userStates[query.message.chat.id] = {
         state: STATES.WAITING_FOR_EDIT_PROFILE,
