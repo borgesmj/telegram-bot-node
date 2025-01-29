@@ -1066,6 +1066,29 @@ export default async function handleUserQueries(
       await userManager.setEditProfile(chatId, {});
       await messageSender.sendMenu(chatId);
       return;
+    case "upgrade_plan_btn":
+      await messageSender.editTextMessage(
+        chatId,
+        "🌟 Para poder seguir mejorando y actualizar tu plan, agradeceríamos mucho un aporte voluntario que nos ayude a continuar con el proyecto. ¡Tu apoyo es fundamental! 🙏",
+        [
+          [
+            {
+              text: "Quiero apoyar el proyecto 💖",
+              url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+            },
+          ],
+          [
+            {
+              text: "Ver beneficios 🎁",
+              url: "https://telegram-bot-node-cee9.onrender.com/planes",
+            },
+          ],
+          [{ text: "Regresar al menú 🔙", callback_data: "back_to_menu_btn" }],
+        ],
+        messageId
+      );
+      return;
+
     default:
       console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {
