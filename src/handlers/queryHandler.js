@@ -1088,7 +1088,42 @@ export default async function handleUserQueries(
         messageId
       );
       return;
-
+    case "about_bot":
+      await messageSender.sendTextMessage(chatId, botReplies[60], []);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await messageSender.sendTextMessage(chatId, botReplies[61], [
+        [
+          {
+            text: "Mi pagina web con mas información",
+            url: "https://telegram-bot-node-cee9.onrender.com/",
+          },
+        ],
+        [
+          {
+            text: "Repositorio de github del proyecto",
+            url: "https://github.com/borgesmj/telegram-bot-node",
+          },
+        ],
+        [
+          {
+            text: "Página web de Miguel",
+            url: "https://borgesmj.github.io/",
+          },
+        ],
+        [
+          {
+            text: "Quiero apoyar el proyecto 💖",
+            url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+          },
+        ],
+        [
+          {
+            text: "Regresar al menú principal",
+            callback_data: "back_to_menu_btn",
+          },
+        ],
+      ]);
+      return;
     default:
       console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {

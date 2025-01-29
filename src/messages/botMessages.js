@@ -70,7 +70,7 @@ export const botReplies = [
   // ! 34
   "🤖\n\nResumen de tus finanzas:\n\n💰 *Ingresos:* `$income`\n💸 *Egresos:* `$expenses`\n💵 *Ahorros:* `$savings`\n\n\n📊 *Saldo Total:* `$balance`\n\n¡Sigue así para alcanzar tus metas financieras! 🚀",
   // ! 35
-  "🤖\n\nHasta ahota tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo.",
+  "🤖\n\nHasta ahora tienes un total de `$ammount` ahorrados, puedes retirar en el botón de abajo.",
   // ! 36
   "🟢 *Ingresos totales:* `$ammount`",
   // ! 37
@@ -126,5 +126,9 @@ export const botReplies = [
 // ! 58
 "🤖\n\n👍 $category fué agregada con exito.",
 // ! 59
-"🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`"
+"🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`",
+// ! 60
+"🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.",
+//!61
+"💖 *¡Apóyame!*\nSi te gusta mi trabajo y quieres contribuir al proyecto, puedes hacer un aporte en mi página de donaciones. ¡Tu apoyo es fundamental para seguir mejorando!"
 ];
