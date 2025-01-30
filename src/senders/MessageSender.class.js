@@ -100,6 +100,7 @@ export default class MessageSender {
     } catch (error) {
       console.log("Error enviando la imagen: ", error);
     }
+    return {success: true, error: "Error enviando la imagen: "}
   }
 
   deleteMessage(chatId, messageId){

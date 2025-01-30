@@ -48,6 +48,7 @@ export default async function handleUserQueries(
   let expenseBalance = 0;
   let incomeBalance = 0;
   let generalBalance = 0;
+  let photoSent = null
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -1292,20 +1293,24 @@ export default async function handleUserQueries(
       await messageSender.sendMenu(chatId, currentUser.ROLE);
       return;
     case "donate_nequi_btn":
-      await messageSender.sendPhoto(
+      photoSent = await messageSender.sendPhoto(
         chatId,
         "AgACAgEAAxkBAAIIM2ebntcZgwZh_AP2N7ZVbE-twNSLAALQrTEbyWXhRF1FsXOJyySBAQADAgADeAADNgQ",
         botReplies[68]
       );
+      if(!photoSent.success){
+        await messageSender.sendTextMessage(chatId, photoSent.error, [])
+      }
       await new Promise((resolve) => setTimeout(resolve, 2000));
       return;
     case "donate_binance_btn":
-      await messageSender.sendPhoto(
+      photoSent = await messageSender.sendPhoto(
         chatId,
         "AgACAgEAAxkBAAIIS2eboES-nOX2otmX9HnxVXoXhbYNAALRrTEbyWXhRMeZ4kTlI3dBAQADAgADeAADNgQ",
         botReplies[68]
       );
       await new Promise((resolve) => setTimeout(resolve, 2000));
+      
       return;
     case "delete_picture_btn":
       await messageSender.deleteMessage(chatId, messageId);
