@@ -3,6 +3,7 @@ import {
   createNewSaving,
   createNewUser,
   editProfile,
+  editUserTimeZone,
   fetchAllUserCategories,
   fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
@@ -13,11 +14,12 @@ import {
   fetchTransactionsAndBalance,
   fetchTransactionsList,
   fetchUserCategories,
+  fetchUsers,
   insertNewTransactionCategory,
   updateUserCategory,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
-import { adjustToLocalTime } from "../utils/dateFormater.js";
+import { adjustToLocalTime, timeZones } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import { decryptText, encrypText } from "../helpers/encryptText.js";
@@ -42,6 +44,10 @@ export default async function handleUserQueries(
   let tempAmmount = 0;
   let editProfileStatus = null;
   let userCategories = [];
+  let savingsBalance = 0;
+  let expenseBalance = 0;
+  let incomeBalance = 0;
+  let generalBalance = 0;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -123,7 +129,7 @@ export default async function handleUserQueries(
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
         ammount: newInitialBalance,
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
 
       const setInitialBalance = await createNewRecord(
@@ -144,7 +150,7 @@ export default async function handleUserQueries(
     case "confirm_initial_savings_btn":
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
       const { ammount, created_at, user_id } =
         userManager.getUserTransaction(chatId);
@@ -179,12 +185,33 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "waiting_for_transaction_name");
       return;
     case "confirm_transaction":
+      incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      } else if (
+        userManager.getUserTransaction(chatId).type === "EGRESO" &&
+        userManager.getUserTransaction(chatId).ammount > generalBalance
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[66], []);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await messageSender.sendMenu(chatId);
         return;
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -237,12 +264,31 @@ export default async function handleUserQueries(
       );
       return;
     case "confirm_new_savings_btn":
+      incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      } else if (
+        userManager.getUserTransaction(chatId).ammount > generalBalance
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[66], []);
+        await messageSender.sendMenu(chatId);
         return;
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -502,22 +548,20 @@ export default async function handleUserQueries(
       );
       return;
     case "see_balance_history_btn":
-      const incomeBalance = await fetchTransactionsAndBalance(
+      incomeBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "INGRESO"
       );
-      const expenseBalance = await fetchTransactionsAndBalance(
+      expenseBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "EGRESO"
       );
-      const savingsBalance = await fetchTransactionsAndBalance(
+      savingsBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "AHORROS"
       );
-      const savingsHistoricBalance = await fetchSavings(
-        currentUser.id,
-      );
-      const generalBalance = incomeBalance - expenseBalance - savingsBalance;
+      const savingsHistoricBalance = await fetchSavings(currentUser.id);
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       newTextMessage = botReplies[34]
         .replace(
           "$income",
@@ -766,8 +810,6 @@ export default async function handleUserQueries(
             text: "Nombre",
             callback_data: "edit_firstname_btn",
           },
-        ],
-        [
           {
             text: "Apellido",
             callback_data: "edit_lastname_btn",
@@ -778,8 +820,6 @@ export default async function handleUserQueries(
             text: "Email",
             callback_data: "edit_email_btn",
           },
-        ],
-        [
           {
             text: "Categorías",
             callback_data: "edit_categories_btn",
@@ -790,8 +830,12 @@ export default async function handleUserQueries(
             text: "Actualizar username",
             callback_data: "edit_username_btn",
           },
+          {
+            text: "Zona horaria",
+            callback_data: "change_time_zome_btn",
+          },
         ],
-        [{ text: "Actualizar plan", callback_data: "upgrade_plan_btn" }],
+        [{ text: "🆙 Actualizar plan", callback_data: "upgrade_plan_btn" }],
         [
           {
             text: "⏪ Regresar a mi perfil",
@@ -1135,9 +1179,19 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "waiting_for_new_savings_withdraw");
       return;
     case "confirm_new_savings_withdraw_btn":
+      const savingsTotalAmmount = await fetchSavings(currentUser.id);
+      if (
+        savingsTotalAmmount <
+        Math.abs(userManager.getUserTransaction(chatId).ammount)
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[67], []);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await messageSender.sendMenu(chatId);
+        return;
+      }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
       confirmTransaction = await createNewSaving(
         userManager.getUserTransaction(chatId)
@@ -1163,13 +1217,100 @@ export default async function handleUserQueries(
       inline_keyboard = [
         [
           {
-            text: "Ir a la página de donación",
-            url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+            text: "Nequi (solo en Colombia 🇨🇴)",
+            callback_data: "donate_nequi_btn",
+          },
+        ],
+        [
+          {
+            text: "Binance",
+            callback_data: "donate_binance_btn",
           },
         ],
         [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
       ];
-      await messageSender.editTextMessage(chatId, botReplies[64], inline_keyboard, messageId);
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[64],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "change_time_zome_btn":
+      tempRow = [];
+      inline_keyboard = [];
+      timeZones.forEach((timezone, index) => {
+        let optionText = timezone
+          .split("/")
+          [timezone.split("/").length - 1].replace("_", " ");
+        if (currentUser.timezone === timezone) {
+          optionText = `✅ ${optionText}`;
+        }
+        tempRow.push({
+          text: optionText,
+          callback_data: `change_time_zone_to_:${timezone}`,
+        });
+
+        if (tempRow.length === 2 || index == timeZones.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([{ text: "Cancelar", callback_data: "my_profile" }]);
+      newTextMessage = botReplies[65].replace(
+        "$timezone",
+        currentUser.timezone
+      );
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "go_to_admin_menu":
+      inline_keyboard = [
+        [{ text: "Conteo de usuarios", callback_data: "count_users_btn" }],
+        [{ text: "salir", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        "admin menu",
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "count_users_btn":
+      let allUsers = await fetchUsers();
+      await messageSender.sendTextMessage(
+        chatId,
+        `Hasta ahora hay un total de ${
+          allUsers.length - 1
+        } usuarios registrados`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId, currentUser.ROLE);
+      return;
+    case "donate_nequi_btn":
+      await messageSender.sendPhoto(
+        chatId,
+        "AgACAgEAAxkBAAIIM2ebntcZgwZh_AP2N7ZVbE-twNSLAALQrTEbyWXhRF1FsXOJyySBAQADAgADeAADNgQ",
+        botReplies[68]
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    case "donate_binance_btn":
+      await messageSender.sendPhoto(
+        chatId,
+        "AgACAgEAAxkBAAIIS2eboES-nOX2otmX9HnxVXoXhbYNAALRrTEbyWXhRMeZ4kTlI3dBAQADAgADeAADNgQ",
+        botReplies[68]
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    case "delete_picture_btn":
+      await messageSender.deleteMessage(chatId, messageId);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await messageSender.sendMenu(chatId)
       return;
     default:
       console.log(query.data);
@@ -1330,6 +1471,22 @@ export default async function handleUserQueries(
           inline_keyboard,
           messageId
         );
+      } else if (query.data.startsWith("change_time_zone_to_:")) {
+        const changeTimeZone = await editUserTimeZone(
+          currentUser.id,
+          query.data.split(":")[1]
+        );
+        if (!changeTimeZone.success) {
+          await messageSender.sendTextMessage(chatId, changeTimeZone.error, []);
+          messageSender.sendMenu(chatId);
+          return;
+        }
+        messageSender.sendTextMessage(
+          chatId,
+          "Zona horaria cambiada con exito",
+          []
+        );
+        messageSender.sendMenu(chatId);
       }
       return;
   }
