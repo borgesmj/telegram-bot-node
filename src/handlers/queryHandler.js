@@ -23,12 +23,13 @@ import { adjustToLocalTime, timeZones } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import { decryptText, encrypText } from "../helpers/encryptText.js";
-
+import fs from "fs";
 export default async function handleUserQueries(
   query,
   userManager,
   currentUser,
-  messageSender
+  messageSender,
+  imagePath
 ) {
   let inline_keyboard = [];
   let newTextMessage = "";
@@ -48,7 +49,9 @@ export default async function handleUserQueries(
   let expenseBalance = 0;
   let incomeBalance = 0;
   let generalBalance = 0;
-  let photoSent = null
+  let photoSent = null;
+  let filePath = "";
+  let fileStream = null
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -1293,29 +1296,35 @@ export default async function handleUserQueries(
       await messageSender.sendMenu(chatId, currentUser.ROLE);
       return;
     case "donate_nequi_btn":
+      filePath = `${imagePath}/nequi.jpg`;
+      fileStream = fs.createReadStream(filePath);
       photoSent = await messageSender.sendPhoto(
         chatId,
-        "AgACAgEAAxkBAAIIM2ebntcZgwZh_AP2N7ZVbE-twNSLAALQrTEbyWXhRF1FsXOJyySBAQADAgADeAADNgQ",
+        fileStream,
         botReplies[68]
       );
-      if(!photoSent.success){
-        await messageSender.sendTextMessage(chatId, photoSent.error, [])
+      if (!photoSent.success) {
+        await messageSender.sendTextMessage(chatId, photoSent.error, []);
       }
       await new Promise((resolve) => setTimeout(resolve, 2000));
       return;
     case "donate_binance_btn":
+      filePath = `${imagePath}/binance.jpg`;
+      fileStream = fs.createReadStream(filePath);
       photoSent = await messageSender.sendPhoto(
         chatId,
-        "AgACAgEAAxkBAAIIS2eboES-nOX2otmX9HnxVXoXhbYNAALRrTEbyWXhRMeZ4kTlI3dBAQADAgADeAADNgQ",
+        fileStream,
         botReplies[68]
       );
+      if (!photoSent.success) {
+        await messageSender.sendTextMessage(chatId, photoSent.error, []);
+      }
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      
       return;
     case "delete_picture_btn":
       await messageSender.deleteMessage(chatId, messageId);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await messageSender.sendMenu(chatId)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await messageSender.sendMenu(chatId);
       return;
     default:
       console.log(query.data);

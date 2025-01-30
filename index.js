@@ -1,5 +1,5 @@
 import express from "express";
-import { dirname, join } from "path";
+import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import indexRoutes from "./src/routes/index.js";
 import dotenv from "dotenv";
@@ -20,7 +20,7 @@ const port = parseInt(process.env.PORT) || process.argv[3] || 3000;
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
 });
-
+const imagePath = path.join(__dirname,'src' ,'public', 'Images', 'QRcodes' )
 // telegram bot
 dotenv.config();
 const userManager = new Users();
@@ -68,7 +68,7 @@ bot.onText(/\/(\w+)/, async (msg, match) => {
 });
 // filtrado de querys
 bot.on("callback_query", async (query) => {
-  await handleUserQueries(query, userManager, currentUser, messageSender);
+  await handleUserQueries(query, userManager, currentUser, messageSender, imagePath );
 });
 // errores
 bot.on("polling_error", (err) => console.error("Polling error:", err));

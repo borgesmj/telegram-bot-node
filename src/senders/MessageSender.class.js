@@ -99,6 +99,7 @@ export default class MessageSender {
       });
     } catch (error) {
       console.log("Error enviando la imagen: ", error);
+      return {success: false, error: "Error enviando la imagen: "}
     }
     return {success: true, error: "Error enviando la imagen: "}
   }
