@@ -1178,7 +1178,6 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "waiting_for_new_savings_withdraw");
       return;
     case "confirm_new_savings_withdraw_btn":
-      // ! PENDIENTE DE VERIFICACION DE SALDO
       const savingsTotalAmmount = await fetchSavings(currentUser.id);
       if (
         savingsTotalAmmount < Math.abs(userManager.getUserTransaction(chatId).ammount)
