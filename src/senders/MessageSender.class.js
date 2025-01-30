@@ -87,4 +87,26 @@ export default class MessageSender {
       });
     } catch (error) {}
   }
+
+  sendPhoto(chatId, fileId, caption){
+    this.inlineKeyboard = [[{text: "Menu principal", callback_data: "delete_picture_btn"}]]
+    try {
+      this.bot.sendPhoto(chatId, fileId, {
+        caption: caption,
+        reply_markup: {
+          inline_keyboard: this.inlineKeyboard,
+        },
+      });
+    } catch (error) {
+      console.log("Error enviando la imagen: ", error);
+    }
+  }
+
+  deleteMessage(chatId, messageId){
+    try {
+      this.bot.deleteMessage(chatId, messageId);
+    } catch (error) {
+      console.log("Error borrando el mensaje", error)
+    }
+  }
 }

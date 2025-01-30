@@ -1217,8 +1217,14 @@ export default async function handleUserQueries(
       inline_keyboard = [
         [
           {
-            text: "Ir a la página de donación",
-            url: "https://vaki.co/es/vaki/migueljose?utm_source=copy&utm_medium=vaki-page&utm_campaign=v4",
+            text: "Nequi (solo en Colombia 🇨🇴)",
+            callback_data: "donate_nequi_btn",
+          },
+        ],
+        [
+          {
+            text: "Binance",
+            callback_data: "donate_binance_btn",
           },
         ],
         [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
@@ -1284,6 +1290,27 @@ export default async function handleUserQueries(
       );
       await new Promise((resolve) => setTimeout(resolve, 300));
       await messageSender.sendMenu(chatId, currentUser.ROLE);
+      return;
+    case "donate_nequi_btn":
+      await messageSender.sendPhoto(
+        chatId,
+        "AgACAgEAAxkBAAIIM2ebntcZgwZh_AP2N7ZVbE-twNSLAALQrTEbyWXhRF1FsXOJyySBAQADAgADeAADNgQ",
+        botReplies[68]
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    case "donate_binance_btn":
+      await messageSender.sendPhoto(
+        chatId,
+        "AgACAgEAAxkBAAIIS2eboES-nOX2otmX9HnxVXoXhbYNAALRrTEbyWXhRMeZ4kTlI3dBAQADAgADeAADNgQ",
+        botReplies[68]
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    case "delete_picture_btn":
+      await messageSender.deleteMessage(chatId, messageId);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await messageSender.sendMenu(chatId)
       return;
     default:
       console.log(query.data);

@@ -136,11 +136,13 @@ export const botReplies = [
   // ! 63
   "¿Confirmas el retiro del monto `$ammount` de tus ahorros?",
   // ! 64
-  "🤖 ¡Gracias por tu apoyo!\n\nEstamos muy agradecidos por querer colaborar. Con tu aporte, podremos mejorar este proyecto y desarrollar muchos más en el futuro.\n\nPara apoyarnos:\n1️⃣ Haz clic en el enlace de abajo.\n2️⃣ Completa el proceso indicado.\n3️⃣ Toma una captura de pantalla del comprobante y envíamela por este chat.\n\n¡Mil gracias! ❤️🙏",
+  "🤖 ¡Gracias por tu apoyo!\n\nEstamos muy agradecidos por querer colaborar. Con tu aporte, podremos mejorar este proyecto y desarrollar muchos más en el futuro.\n\nPara apoyarnos:\n1️⃣ Haz clic en la opcion de tu preferencia abajo.\n2️⃣ Completa el proceso indicado.\n3️⃣ Toma una captura de pantalla del comprobante y envíamela por este chat.\n\n¡Mil gracias! ❤️🙏",
   // !65
   "En estos momentos tienes la zona horaria de `$timezone` ¿deseas cambiarlo?",
   // ! 66
   "🤖\n\nLo siento, no tienes suficiente saldo para realizar esta transacción. Por favor, revisa tus cuentas y verifica los saldos en el *Menú* ▶ *Ver saldos* ▶ *Historial Completo* para asegurar que todo esté correcto.",
   // ! 67
   "🤖\n\nLo siento, no tienes suficiente saldo en los ahorros para realizar esta transacción. Por favor, revisa tus cuentas y verifica los saldos en el *Menú* ▶ *Ver saldos* ▶ *Ver ahorros* para asegurar que todo esté correcto.",
+  // ! 68
+  "¡Muchas gracias por tu apoyo! 🙏💖 Puedes realizar la transferencia utilizando el codigo QR. 😊"
 ];
