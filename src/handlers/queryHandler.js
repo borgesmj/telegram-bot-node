@@ -3,6 +3,7 @@ import {
   createNewSaving,
   createNewUser,
   editProfile,
+  editUserTimeZone,
   fetchAllUserCategories,
   fetchAmmountByCategoriesandMonth,
   fetchBalanceByMonth,
@@ -17,7 +18,7 @@ import {
   updateUserCategory,
 } from "../database/databaseHandlers.js";
 import { botReplies } from "../messages/botMessages.js";
-import { adjustToLocalTime } from "../utils/dateFormater.js";
+import { adjustToLocalTime, timeZones } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import { decryptText, encrypText } from "../helpers/encryptText.js";
@@ -123,7 +124,7 @@ export default async function handleUserQueries(
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
         ammount: newInitialBalance,
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
 
       const setInitialBalance = await createNewRecord(
@@ -144,7 +145,7 @@ export default async function handleUserQueries(
     case "confirm_initial_savings_btn":
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
       const { ammount, created_at, user_id } =
         userManager.getUserTransaction(chatId);
@@ -184,7 +185,7 @@ export default async function handleUserQueries(
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -242,7 +243,7 @@ export default async function handleUserQueries(
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -514,9 +515,7 @@ export default async function handleUserQueries(
         currentUser.id,
         "AHORROS"
       );
-      const savingsHistoricBalance = await fetchSavings(
-        currentUser.id,
-      );
+      const savingsHistoricBalance = await fetchSavings(currentUser.id);
       const generalBalance = incomeBalance - expenseBalance - savingsBalance;
       newTextMessage = botReplies[34]
         .replace(
@@ -766,8 +765,6 @@ export default async function handleUserQueries(
             text: "Nombre",
             callback_data: "edit_firstname_btn",
           },
-        ],
-        [
           {
             text: "Apellido",
             callback_data: "edit_lastname_btn",
@@ -778,8 +775,6 @@ export default async function handleUserQueries(
             text: "Email",
             callback_data: "edit_email_btn",
           },
-        ],
-        [
           {
             text: "Categorías",
             callback_data: "edit_categories_btn",
@@ -790,8 +785,12 @@ export default async function handleUserQueries(
             text: "Actualizar username",
             callback_data: "edit_username_btn",
           },
+          {
+            text: "Zona horaria",
+            callback_data: "change_time_zome_btn",
+          },
         ],
-        [{ text: "Actualizar plan", callback_data: "upgrade_plan_btn" }],
+        [{ text: "🆙 Actualizar plan", callback_data: "upgrade_plan_btn" }],
         [
           {
             text: "⏪ Regresar a mi perfil",
@@ -1137,7 +1136,7 @@ export default async function handleUserQueries(
     case "confirm_new_savings_withdraw_btn":
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: adjustToLocalTime(new Date()),
+        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
       });
       confirmTransaction = await createNewSaving(
         userManager.getUserTransaction(chatId)
@@ -1169,7 +1168,41 @@ export default async function handleUserQueries(
         ],
         [{ text: "Regresar", callback_data: "back_to_menu_btn" }],
       ];
-      await messageSender.editTextMessage(chatId, botReplies[64], inline_keyboard, messageId);
+      await messageSender.editTextMessage(
+        chatId,
+        botReplies[64],
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "change_time_zome_btn":
+      tempRow = [];
+      inline_keyboard = [];
+      timeZones.forEach((timezone, index) => {
+        let optionText = timezone
+          .split("/")
+          [timezone.split("/").length - 1].replace("_", " ");
+        if (currentUser.timezone === timezone) {
+          optionText = `✅ ${optionText}`;
+        }
+        tempRow.push({
+          text: optionText,
+          callback_data: `change_time_zone_to_:${timezone}`,
+        });
+
+        if (tempRow.length === 2 || index == timeZones.length - 1) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
+        }
+      });
+      inline_keyboard.push([{ text: "Cancelar", callback_data: "my_profile" }]);
+      newTextMessage = botReplies[65].replace("$timezone", currentUser.timezone)
+      messageSender.editTextMessage(
+        chatId,
+        newTextMessage,
+        inline_keyboard,
+        messageId
+      );
       return;
     default:
       console.log(query.data);
@@ -1330,6 +1363,22 @@ export default async function handleUserQueries(
           inline_keyboard,
           messageId
         );
+      } else if (query.data.startsWith("change_time_zone_to_:")) {
+        const changeTimeZone = await editUserTimeZone(
+          currentUser.id,
+          query.data.split(":")[1]
+        );
+        if (!changeTimeZone.success) {
+          await messageSender.sendTextMessage(chatId, changeTimeZone.error, []);
+          messageSender.sendMenu(chatId);
+          return;
+        }
+        messageSender.sendTextMessage(
+          chatId,
+          "Zona horaria cambiada con exito",
+          []
+        );
+        messageSender.sendMenu(chatId);
       }
       return;
   }

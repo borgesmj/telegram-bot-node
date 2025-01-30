@@ -136,5 +136,7 @@ export const botReplies = [
   // ! 63
   "¿Confirmas el retiro del monto `$ammount` de tus ahorros?",
   // ! 64
-  "🤖 ¡Gracias por tu apoyo!\n\nEstamos muy agradecidos por querer colaborar. Con tu aporte, podremos mejorar este proyecto y desarrollar muchos más en el futuro.\n\nPara apoyarnos:\n1️⃣ Haz clic en el enlace de abajo.\n2️⃣ Completa el proceso indicado.\n3️⃣ Toma una captura de pantalla del comprobante y envíamela por este chat.\n\n¡Mil gracias! ❤️🙏"
+  "🤖 ¡Gracias por tu apoyo!\n\nEstamos muy agradecidos por querer colaborar. Con tu aporte, podremos mejorar este proyecto y desarrollar muchos más en el futuro.\n\nPara apoyarnos:\n1️⃣ Haz clic en el enlace de abajo.\n2️⃣ Completa el proceso indicado.\n3️⃣ Toma una captura de pantalla del comprobante y envíamela por este chat.\n\n¡Mil gracias! ❤️🙏",
+  // !65
+  "En estos momentos tienes la zona horaria de `$timezone` ¿deseas cambiarlo?"
 ];

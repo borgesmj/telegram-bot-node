@@ -413,7 +413,7 @@ export async function fetchInitialBalance(userId, month) {
 }
 
 export async function fetchSavings(userId) {
-  let totalAmmount = 0
+  let totalAmmount = 0;
   try {
     const { data, error } = await supabase
       .from("savings")
@@ -423,6 +423,26 @@ export async function fetchSavings(userId) {
       throw error;
     }
     totalAmmount = data.reduce((acc, cur) => acc + cur.ammount, 0);
-    return totalAmmount
+    return totalAmmount;
   } catch (error) {}
+}
+
+export async function editUserTimeZone(userId, newTimeZone) {
+  try {
+    const { error } = await supabase
+      .from("users")
+      .update({ timezone: newTimeZone })
+      .eq("id", userId);
+    if (error) {
+      throw error;
+    } else {
+      return { success: true, error: "" };
+    }
+  } catch (error) {
+    console.log("Error actualizando la zona horaria del usuario");
+    return {
+      success: false,
+      error: "Error actualizando la zona horaria del usuario",
+    };
+  }
 }
