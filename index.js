@@ -71,6 +71,8 @@ bot.on("callback_query", async (query) => {
   await handleUserQueries(query, userManager, currentUser, messageSender);
 });
 // errores
-bot.on("polling_error", (err) => {
-  console.log(err);
+bot.on("polling_error", (err) => console.error("Polling error:", err));
+app.use((err, req, res, next) => {
+  console.error("Express error:", err);
+  res.status(500).send("Something went wrong!");
 });
