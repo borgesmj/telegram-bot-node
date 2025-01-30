@@ -43,6 +43,10 @@ export default async function handleUserQueries(
   let tempAmmount = 0;
   let editProfileStatus = null;
   let userCategories = [];
+  let savingsBalance = 0;
+  let expenseBalance = 0;
+  let incomeBalance = 0;
+  let generalBalance = 0;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -180,7 +184,28 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "waiting_for_transaction_name");
       return;
     case "confirm_transaction":
+      incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      } else if (
+        userManager.getUserTransaction(chatId).type === "EGRESO" &&
+        userManager.getUserTransaction(chatId).ammount > generalBalance
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[66], []);
+        await new Promise (resolve => setTimeout(resolve, 300))
+        await messageSender.sendMenu(chatId);
         return;
       }
       userManager.setUserTransaction(chatId, {
@@ -238,7 +263,26 @@ export default async function handleUserQueries(
       );
       return;
     case "confirm_new_savings_btn":
+      incomeBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "INGRESO"
+      );
+      expenseBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "EGRESO"
+      );
+      savingsBalance = await fetchTransactionsAndBalance(
+        currentUser.id,
+        "AHORROS"
+      );
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+        return;
+      } else if (
+        userManager.getUserTransaction(chatId).ammount > generalBalance
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[66], []);
+        await messageSender.sendMenu(chatId);
         return;
       }
       userManager.setUserTransaction(chatId, {
@@ -503,20 +547,20 @@ export default async function handleUserQueries(
       );
       return;
     case "see_balance_history_btn":
-      const incomeBalance = await fetchTransactionsAndBalance(
+      incomeBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "INGRESO"
       );
-      const expenseBalance = await fetchTransactionsAndBalance(
+      expenseBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "EGRESO"
       );
-      const savingsBalance = await fetchTransactionsAndBalance(
+      savingsBalance = await fetchTransactionsAndBalance(
         currentUser.id,
         "AHORROS"
       );
       const savingsHistoricBalance = await fetchSavings(currentUser.id);
-      const generalBalance = incomeBalance - expenseBalance - savingsBalance;
+      generalBalance = incomeBalance - expenseBalance - savingsBalance;
       newTextMessage = botReplies[34]
         .replace(
           "$income",
@@ -1134,6 +1178,16 @@ export default async function handleUserQueries(
       userManager.setUserStatus(chatId, "waiting_for_new_savings_withdraw");
       return;
     case "confirm_new_savings_withdraw_btn":
+      // ! PENDIENTE DE VERIFICACION DE SALDO
+      const savingsTotalAmmount = await fetchSavings(currentUser.id);
+      if (
+        savingsTotalAmmount < Math.abs(userManager.getUserTransaction(chatId).ammount)
+      ) {
+        await messageSender.sendTextMessage(chatId, botReplies[67], []);
+        await new Promise(resolve => setTimeout(resolve, 300))
+        await messageSender.sendMenu(chatId);
+        return;
+      }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
         created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
@@ -1196,7 +1250,10 @@ export default async function handleUserQueries(
         }
       });
       inline_keyboard.push([{ text: "Cancelar", callback_data: "my_profile" }]);
-      newTextMessage = botReplies[65].replace("$timezone", currentUser.timezone)
+      newTextMessage = botReplies[65].replace(
+        "$timezone",
+        currentUser.timezone
+      );
       messageSender.editTextMessage(
         chatId,
         newTextMessage,
