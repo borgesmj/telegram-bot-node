@@ -14,6 +14,7 @@ import {
   fetchTransactionsAndBalance,
   fetchTransactionsList,
   fetchUserCategories,
+  fetchUsers,
   insertNewTransactionCategory,
   updateUserCategory,
 } from "../database/databaseHandlers.js";
@@ -204,7 +205,7 @@ export default async function handleUserQueries(
         userManager.getUserTransaction(chatId).ammount > generalBalance
       ) {
         await messageSender.sendTextMessage(chatId, botReplies[66], []);
-        await new Promise (resolve => setTimeout(resolve, 300))
+        await new Promise((resolve) => setTimeout(resolve, 300));
         await messageSender.sendMenu(chatId);
         return;
       }
@@ -1180,10 +1181,11 @@ export default async function handleUserQueries(
     case "confirm_new_savings_withdraw_btn":
       const savingsTotalAmmount = await fetchSavings(currentUser.id);
       if (
-        savingsTotalAmmount < Math.abs(userManager.getUserTransaction(chatId).ammount)
+        savingsTotalAmmount <
+        Math.abs(userManager.getUserTransaction(chatId).ammount)
       ) {
         await messageSender.sendTextMessage(chatId, botReplies[67], []);
-        await new Promise(resolve => setTimeout(resolve, 300))
+        await new Promise((resolve) => setTimeout(resolve, 300));
         await messageSender.sendMenu(chatId);
         return;
       }
@@ -1259,6 +1261,29 @@ export default async function handleUserQueries(
         inline_keyboard,
         messageId
       );
+      return;
+    case "go_to_admin_menu":
+      inline_keyboard = [
+        [{ text: "Conteo de usuarios", callback_data: "count_users_btn" }],
+        [{ text: "salir", callback_data: "back_to_menu_btn" }],
+      ];
+      await messageSender.editTextMessage(
+        chatId,
+        "admin menu",
+        inline_keyboard,
+        messageId
+      );
+      return;
+    case "count_users_btn":
+      let allUsers = await fetchUsers();
+      await messageSender.sendTextMessage(
+        chatId,
+        `Hasta ahora hay un total de ${
+          allUsers.length - 1
+        } usuarios registrados`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await messageSender.sendMenu(chatId, currentUser.ROLE);
       return;
     default:
       console.log(query.data);
