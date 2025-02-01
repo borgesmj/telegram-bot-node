@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { encrypText } from "../helpers/encryptText.js";
 import { adjustToLocalTime } from "../utils/dateFormater.js";
+import { botErrorMessages } from "../messages/botErrorMessages.js";
 dotenv.config();
 const supabaseUrl = "https://cahmyhmvtrnmrlktnjlf.supabase.co";
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -20,6 +21,7 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
+  let userHasNoUsername = false
   try {
     const {
       first_name,
@@ -29,6 +31,9 @@ export async function createNewUser(chatId, userProfile) {
       currency,
       user_iv,
     } = userProfile;
+    if (!telegram_username) {
+      return {success:false, error:botErrorMessages[2]}
+    }
     const { error } = await supabase.from("users").insert({
       first_name: first_name
         ? encrypText(first_name.toLowerCase(), user_iv)
@@ -36,7 +41,7 @@ export async function createNewUser(chatId, userProfile) {
       last_name: last_name
         ? encrypText(last_name.toLowerCase(), user_iv)
         : null,
-      telegram_username: encrypText(telegram_username, user_iv),
+      telegram_username: encrypText(telegram_username, user_iv) || null,
       telegram_id: chatId,
       email: email ? encrypText(email.toLowerCase(), user_iv) : null,
       currency: currency || null,
