@@ -94,6 +94,7 @@ export default async function commandHandler(
         return;
       }
       messageSender.sendMenu(chatId, await currentUser.ROLE);
+      return
     case "ayuda":
       newTextMessage = botReplies[69];
       inline_keyboard = []
