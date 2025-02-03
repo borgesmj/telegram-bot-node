@@ -233,9 +233,9 @@ export default async function handleUserQueries(
         chatId,
         "CAACAgIAAxkBAAIEd2eY7ZpLKIwF2P1qz0kzamW4FhIqAAL-AANWnb0K2gRhMC751_82BA"
       );
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await messageSender.sendTextMessage(chatId, botReplies[27], []);
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 400));
       await messageSender.sendMenu(chatId);
       userManager.setUserStatus(chatId, "initial");
       userManager.setUserTransaction(chatId, {});
