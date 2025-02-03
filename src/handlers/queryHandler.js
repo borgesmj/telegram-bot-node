@@ -24,6 +24,7 @@ import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
 import { decryptText, encrypText } from "../helpers/encryptText.js";
 import fs from "fs";
+import { botAnswers } from "../messages/help.answers.js";
 export default async function handleUserQueries(
   query,
   userManager,
@@ -1501,6 +1502,13 @@ export default async function handleUserQueries(
           []
         );
         messageSender.sendMenu(chatId);
+      } else if (query.data.startsWith("question-help-")){
+        let answerIndex = query.data.split(":")[1]
+        newTextMessage = botAnswers[answerIndex]
+        messageSender.editTextMessage(chatId, newTextMessage, [], messageId)
+        await new Promise(resolve => setTimeout(resolve, 600))
+        newTextMessage = "Selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo"
+        return
       }
       return;
   }

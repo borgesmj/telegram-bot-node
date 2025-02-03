@@ -14,6 +14,7 @@ export default async function commandHandler(
   let userProfile = {};
   let inline_keyboard = [];
   let newTextMessage = "";
+  let tempRow = [];
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (command.toLowerCase()) {
@@ -28,8 +29,12 @@ export default async function commandHandler(
       if (!isUser) {
         if (!msg.from.username) {
           await messageSender.sendTextMessage(chatId, botErrorMessages[2], []);
-          await new Promise(resolve => setTimeout(resolve, 500))
-          await messageSender.sendTextMessage(chatId, "Si necesitas mas información, utiliza el comando /ayuda", [])
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          await messageSender.sendTextMessage(
+            chatId,
+            "Si necesitas mas información, utiliza el comando /ayuda",
+            []
+          );
           return;
         } else {
           const newUserProfile = {};
@@ -80,11 +85,30 @@ export default async function commandHandler(
     case "menu":
       if (!msg.from.username) {
         await messageSender.sendTextMessage(chatId, botErrorMessages[2], []);
-        await new Promise(resolve => setTimeout(resolve, 500))
-        await messageSender.sendTextMessage(chatId, "Si necesitas mas información, utiliza el comando /ayuda", [])
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await messageSender.sendTextMessage(
+          chatId,
+          "Si necesitas mas información, utiliza el comando /ayuda",
+          []
+        );
         return;
       }
       messageSender.sendMenu(chatId, await currentUser.ROLE);
+    case "ayuda":
+      newTextMessage = botReplies[69];
+      inline_keyboard = []
+      for (let index = 0; index < 10; index++){
+        tempRow.push({
+          text: `${index+1}`,
+          callback_data: `question-help-:${index}`
+        })
+        if (tempRow.length === 5){
+          inline_keyboard.push(tempRow)
+          tempRow = []
+        }
+      }
+      await messageSender.sendTextMessage(chatId, newTextMessage, inline_keyboard);
+      return;
     default:
       break;
   }

@@ -128,7 +128,7 @@ export const botReplies = [
   // ! 59
   "🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`",
   // ! 60
-  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.\n\nversion: `1.0.2`",
+  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.\n\nversion: `1.0.3`",
   //!61
   "💖 *¡Apóyame!*\nSi te gusta mi trabajo y quieres contribuir al proyecto, puedes hacer un aporte en mi página de donaciones. ¡Tu apoyo es fundamental para seguir mejorando!",
   // ! 62
@@ -144,5 +144,7 @@ export const botReplies = [
   // ! 67
   "🤖\n\nLo siento, no tienes suficiente saldo en los ahorros para realizar esta transacción. Por favor, revisa tus cuentas y verifica los saldos en el *Menú* ▶ *Ver saldos* ▶ *Ver ahorros* para asegurar que todo esté correcto.",
   // ! 68
-  "¡Muchas gracias por tu apoyo! 🙏💖 Puedes realizar la transferencia utilizando el codigo QR. 😊"
+  "¡Muchas gracias por tu apoyo! 🙏💖 Puedes realizar la transferencia utilizando el codigo QR. 😊",
+  // ! 69
+  "❓ MENÚ DE AYUDA ❓\n\n1. ¿Necesito un username?\n2. ¿Cómo creo un username?\n3. ¿Cómo registro un movimiento?\n4. ¿Cómo registro un ahorro?\n5. ¿Qué es una categoría?\n6. ¿Cómo creo o edito una categoría?\n7. ¿Puedo consultar mi historial de movimientos?\n8. ¿Cómo obtengo un resumen de mis finanzas?\n9. ¿Puedo exportar mis datos?\n10. ¿Cómo cambio la zona horaria?"
 ];
