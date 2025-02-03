@@ -1507,7 +1507,8 @@ export default async function handleUserQueries(
         newTextMessage = botAnswers[answerIndex]
         messageSender.editTextMessage(chatId, newTextMessage, [], messageId)
         await new Promise(resolve => setTimeout(resolve, 600))
-        newTextMessage = "Selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo"
+        newTextMessage = "Para regresar o salir, selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo"
+        await messageSender.sendTextMessage(chatId, newTextMessage, [])
         return
       }
       return;
