@@ -52,7 +52,7 @@ export default async function handleUserQueries(
   let generalBalance = 0;
   let photoSent = null;
   let filePath = "";
-  let fileStream = null
+  let fileStream = null;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -88,6 +88,10 @@ export default async function handleUserQueries(
       if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
         return;
       }
+      userManager.setNewUser(chatId, {
+        ...userManager.getNewUser(chatId),
+        created_at: new Date(query.message.date * 1000),
+      });
       const newProfile = await createNewUser(
         chatId,
         userManager.getNewUser(chatId)
@@ -134,7 +138,7 @@ export default async function handleUserQueries(
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
         ammount: newInitialBalance,
-        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
+        created_at: await new Date(query.message.date * 1000),
       });
 
       const setInitialBalance = await createNewRecord(
@@ -155,7 +159,7 @@ export default async function handleUserQueries(
     case "confirm_initial_savings_btn":
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
+        created_at: await new Date(query.message.date * 1000),
       });
       const { ammount, created_at, user_id } =
         userManager.getUserTransaction(chatId);
@@ -216,7 +220,7 @@ export default async function handleUserQueries(
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
+        created_at: await new Date(query.message.date * 1000),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -293,7 +297,7 @@ export default async function handleUserQueries(
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
+        created_at: await new Date(query.message.date * 1000),
         user_id: currentUser.id,
       });
       confirmTransaction = await createNewRecord(
@@ -1196,7 +1200,7 @@ export default async function handleUserQueries(
       }
       userManager.setUserTransaction(chatId, {
         ...userManager.getUserTransaction(chatId),
-        created_at: await adjustToLocalTime(new Date(), currentUser.timezone),
+        created_at: await new Date(query.message.date * 1000),
       });
       confirmTransaction = await createNewSaving(
         userManager.getUserTransaction(chatId)
@@ -1458,12 +1462,9 @@ export default async function handleUserQueries(
         const { record_type, detalles, monto, categories, created_at } =
           transactionDetails[0];
         const options = {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-          second: "numeric",
+          dateStyle: "long",
+          timeStyle: "short",
+          timeZone: currentUser.timezone,
           hour12: true,
         };
         const dateTimeFormatter = new Intl.DateTimeFormat("es-CO", options);
@@ -1502,14 +1503,15 @@ export default async function handleUserQueries(
           []
         );
         messageSender.sendMenu(chatId);
-      } else if (query.data.startsWith("question-help-")){
-        let answerIndex = query.data.split(":")[1]
-        newTextMessage = botAnswers[answerIndex]
-        messageSender.editTextMessage(chatId, newTextMessage, [], messageId)
-        await new Promise(resolve => setTimeout(resolve, 600))
-        newTextMessage = "Para regresar o salir, selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo"
-        await messageSender.sendTextMessage(chatId, newTextMessage, [])
-        return
+      } else if (query.data.startsWith("question-help-")) {
+        let answerIndex = query.data.split(":")[1];
+        newTextMessage = botAnswers[answerIndex];
+        messageSender.editTextMessage(chatId, newTextMessage, [], messageId);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        newTextMessage =
+          "Para regresar o salir, selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo";
+        await messageSender.sendTextMessage(chatId, newTextMessage, []);
+        return;
       }
       return;
   }
