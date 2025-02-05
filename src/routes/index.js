@@ -18,5 +18,15 @@ router.get("/contact", (req, res) =>
     title: "Contact Page",
   })
 );
+router.get("/terminos-y-condiciones", (req, res) =>
+  res.render("terminos-y-condiciones", {
+    title: "Términos y condiciones",
+  })
+);
+router.get("/politicas-de-privacidad", (req, res) =>
+  res.render("politicas-de-privacidad", {
+    title: "Politicas de privacidad",
+  })
+);
 
 export default router;

@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title><%= title %></title>
+</head>
+<body>
+  <div id="content"></div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.getElementById('content').innerHTML =
+      marked.parse(`# Política de Privacidad
+
+**Última actualización:** 05 de Febrero de 2025
+
+En **Ahorrin**, tu privacidad es muy importante para nosotros. Esta política de privacidad explica cómo recopilamos, usamos y protegemos tus datos personales.
+
+## 1. Información Recopilada
+Recopilamos los siguientes datos personales:
+- Nombre (encriptado).
+- Apellido (encriptado).
+- Correo electrónico (encriptado).
+- Nombre de usuario de Telegram (encriptado).
+
+## 2. Uso de los Datos
+Usamos los datos personales para los siguientes fines:
+- Personalizar tu experiencia dentro del bot.
+- Crear un perfil de usuario en el futuro, cuando implementemos el sistema de login en nuestra página web.
+
+Los datos no se comparten con terceros, y se mantienen privados en nuestra base de datos.
+
+## 3. Almacenamiento de Datos
+Los datos personales se almacenan en [**Supabase**](https://supabase.com/docs/guides/database/overview) y se encriptan usando la librería [**crypto**](https://nodejs.org/api/crypto.html#crypto). La plataforma también garantiza la seguridad de la autenticación.
+
+## 4. Derecho a Modificar o Eliminar Datos
+Puedes modificar tu nombre, apellido y correo electrónico en cualquier momento a través del bot. Si deseas eliminar tus datos personales, puedes contactarnos para realizar esta solicitud.
+
+## 5. Seguridad
+Tomamos medidas para proteger tus datos personales utilizando encriptación. La seguridad de la información es una prioridad para nosotros.
+
+## 6. Cambios en la Política de Privacidad
+Podemos actualizar esta política de privacidad de vez en cuando. Cualquier cambio será notificado a través de este documento.
+
+---
+
+Si tienes preguntas sobre cómo gestionamos tu privacidad, no dudes en contactarnos.
+`);
+  </script>
+</body>
+</html>

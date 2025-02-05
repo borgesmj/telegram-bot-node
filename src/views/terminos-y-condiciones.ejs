@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title><%= title %></title>
+</head>
+<body>
+  <div id="content"></div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.getElementById('content').innerHTML =
+      marked.parse(`# Términos y Condiciones
+
+**Última actualización:** 05 de Febrero del 2025
+
+Bienvenido a **Ahorrin**. Al utilizar este bot, aceptas estos Términos y Condiciones. Si no estás de acuerdo con estos términos, por favor no uses este servicio.
+
+## 1. Información Recopilada
+Recopilamos los siguientes datos personales:
+- Nombre (encriptado).
+- Apellido (encriptado).
+- Correo electrónico (encriptado).
+- Nombre de usuario de Telegram (encriptado).
+
+Todos los datos personales son almacenados de forma segura y encriptados para proteger tu privacidad.
+
+## 2. Uso de los Datos
+Los datos recopilados se utilizan para:
+- Personalizar tu experiencia en el bot.
+- En el futuro, el correo y el nombre de usuario podrán ser utilizados para crear un perfil de usuario en nuestra página web.
+
+No compartimos tus datos con terceros, excepto cuando sea necesario para cumplir con la ley o para proteger nuestros derechos.
+
+## 3. Almacenamiento de Datos
+Los datos personales son almacenados en [**Supabase**](https://supabase.com/docs/guides/database/overview), una plataforma de base de datos segura. La información se encripta tanto en tránsito como en reposo.
+
+## 4. Modificación de Datos
+Tienes derecho a modificar tu nombre, apellido y correo electrónico en cualquier momento a través de las configuraciones del bot. Los datos se actualizarán de manera segura.
+
+## 5. Eliminar Cuenta
+Actualmente, no ofrecemos la opción de eliminar tu cuenta directamente desde el bot. Sin embargo, si deseas que tus datos sean eliminados, puedes contactarnos para realizar la solicitud.
+
+## 6. Seguridad
+Todos los datos personales son encriptados utilizando la librería "crypto" y la plataforma Supabase se encarga de la autenticación y protección de datos adicionales.
+
+## 7. Cambios en los Términos
+Nos reservamos el derecho de modificar estos Términos y Condiciones en cualquier momento. Cualquier cambio será publicado en este documento.
+
+---
+
+Si tienes alguna duda sobre estos términos, no dudes en contactarnos.
+`);
+  </script>
+</body>
+</html>
