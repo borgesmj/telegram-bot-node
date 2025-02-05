@@ -146,5 +146,7 @@ export const botReplies = [
   // ! 68
   "¡Muchas gracias por tu apoyo! 🙏💖 Puedes realizar la transferencia utilizando el codigo QR. 😊",
   // ! 69
-  "❓ MENÚ DE AYUDA ❓\n\n1. ¿Necesito un username?\n2. ¿Cómo creo un username?\n3. ¿Cómo registro un movimiento?\n4. ¿Cómo registro un ahorro?\n5. ¿Qué es una categoría?\n6. ¿Cómo creo o edito una categoría?\n7. ¿Puedo consultar mi historial de movimientos?\n8. ¿Cómo obtengo un resumen de mis finanzas?\n9. ¿Puedo exportar mis datos?\n10. ¿Cómo cambio la zona horaria?"
+  "❓ MENÚ DE AYUDA ❓\n\n1. ¿Necesito un username?\n2. ¿Cómo creo un username?\n3. ¿Cómo registro un movimiento?\n4. ¿Cómo registro un ahorro?\n5. ¿Qué es una categoría?\n6. ¿Cómo creo o edito una categoría?\n7. ¿Puedo consultar mi historial de movimientos?\n8. ¿Cómo obtengo un resumen de mis finanzas?\n9. ¿Puedo exportar mis datos?\n10. ¿Cómo cambio la zona horaria?",
+  // ! 70
+  '¡Hola y bienvenido a *Ahorrin*!\n\nAntes de comenzar, necesitamos que aceptes nuestros Términos y Condiciones y nuestra Política de Privacidad.\n\n🔹 Al hacer clic en *Aceptar*, confirmas que has leído y aceptas estos documentos.'
 ];

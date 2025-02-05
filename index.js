@@ -27,6 +27,7 @@ const userManager = new Users();
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 const messageSender = new MessageSender(bot);
+const baseUrl = process.env.BASE_URL || "https://3000-idx-telegram-bot-nodejs-1736775469743.cluster-f4iwdviaqvc2ct6pgytzw4xqy4.cloudworkstations.dev/";
 let currentUser = {};
 // Filtrado de mensajes normales
 bot.on("photo", async (msg) => {
@@ -64,7 +65,7 @@ bot.on("message", async (msg) => {
 // filtrado de comandos
 bot.onText(/\/(\w+)/, async (msg, match) => {
   const command = match[1];
-  await commandHandler(command, userManager, msg, currentUser, messageSender);
+  await commandHandler(command, userManager, msg, currentUser, messageSender, baseUrl);
 });
 // filtrado de querys
 bot.on("callback_query", async (query) => {

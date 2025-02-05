@@ -22,9 +22,10 @@ import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime, timeZones } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
-import { decryptText, encrypText } from "../helpers/encryptText.js";
+import { decryptText, encrypText, generateUserIV } from "../helpers/encryptText.js";
 import fs from "fs";
 import { botAnswers } from "../messages/help.answers.js";
+import { botErrorMessages } from "../messages/botErrorMessages.js";
 export default async function handleUserQueries(
   query,
   userManager,
@@ -1330,6 +1331,48 @@ export default async function handleUserQueries(
       await messageSender.deleteMessage(chatId, messageId);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await messageSender.sendMenu(chatId);
+      return;
+    case "accept-terms-and-conditions-btn":
+      if (!query.from.username) {
+        await messageSender.sendTextMessage(chatId, botErrorMessages[2], []);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await messageSender.sendTextMessage(
+          chatId,
+          "Si necesitas mas información, utiliza el comando /ayuda",
+          []
+        );
+        return;
+      } else {
+        const newUserProfile = {};
+        userManager.setUserStatus(chatId, "initial");
+        newUserProfile.telegram_id = chatId;
+        newUserProfile.first_name = query.from.first_name;
+        newUserProfile.last_name = query.from.last_name;
+        newUserProfile.telegram_username = query.from.username;
+        newUserProfile.user_iv = await generateUserIV();
+        userManager.setNewUser(chatId, newUserProfile);
+        await messageSender.sendTextMessage(chatId, botReplies[0], []);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        inline_keyboard = [
+          [
+            {
+              text: "Esta bien asi",
+              callback_data: "not-edit-first-name-btn",
+            },
+            { text: "Cambiarlo", callback_data: "edit-first-name-btn" },
+          ],
+        ];
+        newTextMessage = botReplies[1].replace(
+          "$username",
+          query.from.first_name
+        );
+        await messageSender.sendTextMessage(
+          chatId,
+          newTextMessage,
+          inline_keyboard
+        );
+        userManager.setUserStatus(chatId, "initial");
+      }
       return;
     default:
       console.log(query.data);
