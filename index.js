@@ -27,7 +27,7 @@ const userManager = new Users();
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
 const messageSender = new MessageSender(bot);
-const baseUrl = process.env.BASE_URL || "https://3000-idx-telegram-bot-nodejs-1736775469743.cluster-f4iwdviaqvc2ct6pgytzw4xqy4.cloudworkstations.dev/";
+const baseUrl = "https://telegram-bot-node-cee9.onrender.com";
 let currentUser = {};
 // Filtrado de mensajes normales
 bot.on("photo", async (msg) => {
