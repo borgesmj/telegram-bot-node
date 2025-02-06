@@ -259,8 +259,8 @@ export async function fetchTransactionsAndBalance(userId, type) {
 
 function getRange(month) {
   const currentYear = new Date().getFullYear();
-  const startDate = new Date(currentYear, month - 1, 1);
-  const endDate = new Date(currentYear, month, 0);
+  const startDate = new Date(currentYear, month, 1);
+  const endDate = new Date(currentYear, month + 1, 0);
   endDate.setHours(23, 59, 59, 999);
   return {
     start: startDate.toISOString(),
@@ -273,12 +273,12 @@ export async function fetchBalanceByMonth(userId, month, type) {
   const user_id = await fetchCurrentUserId(userId);
   try {
     const { data, error } = await supabase
-      .from("records")
-      .select("monto")
-      .gte("created_at", start)
-      .lte("created_at", end)
-      .eq("user_id", user_id)
-      .eq("record_type", type);
+    .from("records")
+    .select("monto")
+    .gte("created_at", start)
+    .lte("created_at", end)
+    .eq("user_id", user_id)
+    .eq("record_type", type);
     if (error) {
       throw error;
     }
@@ -400,6 +400,7 @@ export async function fetchAmmountByCategoriesandMonth(
 
 export async function fetchInitialBalance(userId, month) {
   const { start, end } = getRange(month);
+  let initialBalance = 0
   try {
     const { data, error } = await supabase
       .from("records")
@@ -411,7 +412,10 @@ export async function fetchInitialBalance(userId, month) {
     if (error) {
       throw error;
     }
-    return data[0].monto;
+    if (data.length > 0){
+      initialBalance = data[0].monto
+    }
+    return initialBalance
   } catch (error) {
     console.log(error);
   }

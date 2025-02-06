@@ -1,28 +1,28 @@
 export default async function getMonthString(monthNumber) {
   switch (monthNumber) {
-    case "1":
+    case "0":
       return "Enero";
-    case "2":
+    case "1":
       return "Febrero";
-    case "3":
+    case "2":
       return "Marzo";
-    case "4":
+    case "3":
       return "Abril";
-    case "5":
+    case "4":
       return "Mayo";
-    case "6":
+    case "5":
       return "Junio";
-    case "7":
+    case "6":
       return "Julio";
-    case "8":
+    case "7":
       return "Agosto";
-    case "9":
+    case "8":
       return "Septiembre";
-    case "10":
+    case "9":
       return "Octubre";
-    case "11":
+    case "10":
       return "Noviembre";
-    case "12":
+    case "11":
       return "Diciembre"
     default:
       break;

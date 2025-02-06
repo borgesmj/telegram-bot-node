@@ -427,7 +427,7 @@ export default async function handleUserQueries(
       return;
     case "see_balance_current_month_btn":
       const today = new Date();
-      selectedMonth = today.getMonth() + 1;
+      selectedMonth = today.getMonth();
       const incomeBalanceCurrentMonth = await fetchBalanceByMonth(
         chatId,
         selectedMonth,
@@ -490,66 +490,17 @@ export default async function handleUserQueries(
       );
       return;
     case "see_another_month_btn":
-      inline_keyboard = [
-        [
-          {
-            text: "Enero",
-            callback_data: "balance-month-1",
-          },
-          {
-            text: "Febrero",
-            callback_data: "balance-month-2",
-          },
-        ],
-        [
-          {
-            text: "Marzo",
-            callback_data: "balance-month-3",
-          },
-          {
-            text: "Abril",
-            callback_data: "balance-month-4",
-          },
-        ],
-        [
-          {
-            text: "Mayo",
-            callback_data: "balance-month-5",
-          },
-          {
-            text: "Junio",
-            callback_data: "balance-month-6",
-          },
-        ],
-        [
-          {
-            text: "Julio",
-            callback_data: "balance-month-7",
-          },
-          {
-            text: "Agosto",
-            callback_data: "balance-month-8",
-          },
-        ],
-        [
-          {
-            text: "Septiembre",
-            callback_data: "balance-month-9",
-          },
-          {
-            text: "Octubre",
-            callback_data: "balance-month-10",
-          },
-        ],
-        [
-          {
-            text: "Noviembre",
-            callback_data: "balance-month-11",
-          },
-          { text: "Diciembre", callback_data: "balance-month-12" },
-        ],
-        [{ text: "Regresar", callback_data: "see_balances" }],
-      ];
+      inline_keyboard =[]
+      tempRow = []
+      for (let i = 0; i < 12; i++){
+        tempRow.push({text: `${await getMonthString(String(i))}`, callback_data: `balance-month-${i}`})
+
+        if (tempRow.length === 2){
+          inline_keyboard.push(tempRow)
+          tempRow = []
+        }
+      }
+        inline_keyboard.push([{ text: "Regresar", callback_data: "see_balances" }])
       await messageSender.editTextMessage(
         chatId,
         "Elige el mes",
@@ -1427,7 +1378,7 @@ export default async function handleUserQueries(
           savingsBalanceByMonth === 0
         ) {
           newTextMessage = botReplies[33]
-            .replace("$month", ` de ${await getMonthString(selectedMonth)}`)
+            .replace("$month", ` ${await getMonthString(selectedMonth)}`)
             .replace("$currentYear", new Date().getFullYear());
           inline_keyboard = [
             [{ text: "Regresar", callback_data: "see_balances" }],
@@ -1513,14 +1464,14 @@ export default async function handleUserQueries(
         const dateTimeFormatter = new Intl.DateTimeFormat("es-CO", options);
         const formatDate = await dateTimeFormatter.format(new Date(created_at));
         newTextMessage = botReplies[59]
-          .replace("$details", detalles)
-          .replace("$category", categories.name)
-          .replace("$type", record_type)
+          .replace("$details", detalles || "Sin detalles")
+          .replace("$category", categories?.name || "Sin categoría")
+          .replace("$type", record_type || "Sin Tipo de movimiento")
           .replace(
             "$ammount",
-            await numberFormater(monto, currentUser.currency)
+            await numberFormater(monto, currentUser.currency || "0")
           )
-          .replace("$date", formatDate);
+          .replace("$date", formatDate || "Sin fecha");
         inline_keyboard = [
           [{ text: "Regresar", callback_data: "see_records_list" }],
         ];
