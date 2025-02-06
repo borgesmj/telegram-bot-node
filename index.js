@@ -20,12 +20,17 @@ const port = parseInt(process.env.PORT) || process.argv[3] || 3000;
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
 });
-const imagePath = path.join(__dirname,'src' ,'public', 'Images', 'QRcodes' )
+const imagePath = path.join(__dirname, "src", "public", "Images", "QRcodes");
 // telegram bot
 dotenv.config();
 const userManager = new Users();
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBotAPI(telegramBotToken, { polling: true });
+const bot = new TelegramBotAPI(telegramBotToken, {
+  polling: {
+    interval: 3000,
+    autoStart: true,
+  },
+});
 const messageSender = new MessageSender(bot);
 const baseUrl = "https://telegram-bot-node-cee9.onrender.com";
 let currentUser = {};
@@ -65,14 +70,34 @@ bot.on("message", async (msg) => {
 // filtrado de comandos
 bot.onText(/\/(\w+)/, async (msg, match) => {
   const command = match[1];
-  await commandHandler(command, userManager, msg, currentUser, messageSender, baseUrl);
+  await commandHandler(
+    command,
+    userManager,
+    msg,
+    currentUser,
+    messageSender,
+    baseUrl
+  );
 });
 // filtrado de querys
 bot.on("callback_query", async (query) => {
-  await handleUserQueries(query, userManager, currentUser, messageSender, imagePath );
+  await handleUserQueries(
+    query,
+    userManager,
+    currentUser,
+    messageSender,
+    imagePath
+  );
 });
 // errores
-bot.on("polling_error", (err) => console.error("Polling error:", err));
+bot.on("polling_error", (err) => {
+  console.error("Polling error:", err.code, err.message);
+  if (err.code === "EFATAL") {
+    console.log("Intentando reiniciar el bot...");
+    setTimeout(() => bot.startPolling(), 5000);
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error("Express error:", err);
   res.status(500).send("Something went wrong!");
