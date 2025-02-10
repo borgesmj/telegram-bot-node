@@ -2,6 +2,7 @@ import {
   createNewRecord,
   createNewSaving,
   createNewUser,
+  deleteTransaction,
   editProfile,
   editUserTimeZone,
   fetchAllUserCategories,
@@ -22,10 +23,15 @@ import { botReplies } from "../messages/botMessages.js";
 import { adjustToLocalTime, timeZones } from "../utils/dateFormater.js";
 import numberFormater from "../utils/numberFormater.js";
 import getMonthString from "../utils/getMonth.js";
-import { decryptText, encrypText, generateUserIV } from "../helpers/encryptText.js";
+import {
+  decryptText,
+  encrypText,
+  generateUserIV,
+} from "../helpers/encryptText.js";
 import fs from "fs";
 import { botAnswers } from "../messages/help.answers.js";
 import { botErrorMessages } from "../messages/botErrorMessages.js";
+import { text } from "express";
 export default async function handleUserQueries(
   query,
   userManager,
@@ -54,6 +60,7 @@ export default async function handleUserQueries(
   let photoSent = null;
   let filePath = "";
   let fileStream = null;
+  let selectedTransaction = null;
   userManager.setUserProfile(chatId, await fetchCurrentUser(chatId));
   currentUser = await userManager.getUserProfile(chatId);
   switch (query.data) {
@@ -490,17 +497,22 @@ export default async function handleUserQueries(
       );
       return;
     case "see_another_month_btn":
-      inline_keyboard =[]
-      tempRow = []
-      for (let i = 0; i < 12; i++){
-        tempRow.push({text: `${await getMonthString(String(i))}`, callback_data: `balance-month-${i}`})
+      inline_keyboard = [];
+      tempRow = [];
+      for (let i = 0; i < 12; i++) {
+        tempRow.push({
+          text: `${await getMonthString(String(i))}`,
+          callback_data: `balance-month-${i}`,
+        });
 
-        if (tempRow.length === 2){
-          inline_keyboard.push(tempRow)
-          tempRow = []
+        if (tempRow.length === 2) {
+          inline_keyboard.push(tempRow);
+          tempRow = [];
         }
       }
-        inline_keyboard.push([{ text: "Regresar", callback_data: "see_balances" }])
+      inline_keyboard.push([
+        { text: "Regresar", callback_data: "see_balances" },
+      ]);
       await messageSender.editTextMessage(
         chatId,
         "Elige el mes",
@@ -1326,7 +1338,7 @@ export default async function handleUserQueries(
       }
       return;
     default:
-      console.log(query.data);
+      //console.log(query.data);
       if (query.data.startsWith("category-selection-option")) {
         userManager.setUserTransaction(chatId, {
           ...userManager.getUserTransaction(chatId),
@@ -1445,8 +1457,8 @@ export default async function handleUserQueries(
         return;
       } else if (query.data.startsWith("details-transaction")) {
         const transactionId = query.data.split(":")[1];
-        const transactionDetails = await fetchTransactionById(transactionId);
-        if (!transactionDetails) {
+        selectedTransaction = await fetchTransactionById(transactionId);
+        if (!selectedTransaction) {
           await messageSender(
             query.message.chat.id,
             "Lo siento, no pude encontrar ese movimiento, trata de consultar con soporte",
@@ -1454,7 +1466,7 @@ export default async function handleUserQueries(
           );
         }
         const { record_type, detalles, monto, categories, created_at } =
-          transactionDetails[0];
+          selectedTransaction[0];
         const options = {
           dateStyle: "long",
           timeStyle: "short",
@@ -1473,6 +1485,12 @@ export default async function handleUserQueries(
           )
           .replace("$date", formatDate || "Sin fecha");
         inline_keyboard = [
+          [
+            {
+              text: "Borrar este movimiento",
+              callback_data: `delete-transaction:${selectedTransaction[0].id}`,
+            },
+          ],
           [{ text: "Regresar", callback_data: "see_records_list" }],
         ];
         await messageSender.editTextMessage(
@@ -1506,6 +1524,41 @@ export default async function handleUserQueries(
           "Para regresar o salir, selecciona el comando acorde a tu necesidad en el boton azul *menu* aqui debajo";
         await messageSender.sendTextMessage(chatId, newTextMessage, []);
         return;
+      } else if (query.data.startsWith("delete-transaction")) {
+        selectedTransaction = await fetchTransactionById(
+          query.data.split(":")[1]
+        );
+        inline_keyboard = [
+          [{ text: "Cancelar", callback_data: "see_records_list" }],
+          [
+            {
+              text: "Confirmar",
+              callback_data: `confirm-delete-transaction:${selectedTransaction[0].id}`,
+            },
+          ],
+        ];
+        messageSender.editTextMessage(
+          chatId,
+          botReplies[71].replace(
+            "%transactionname",
+            selectedTransaction[0].detalles
+          ),
+          inline_keyboard,
+          messageId
+        );
+        userManager.setUserStatus(chatId, "waiting_for_confirmation");
+      } else if (query.data.startsWith("confirm-delete-transaction")) {
+        if (!userManager.getUserStatus(chatId) === "waiting_for_confirmation") {
+          return;
+        }
+        const deleteTransactionId = await deleteTransaction(query.data.split(":")[1])
+        if (!deleteTransactionId.success){
+          await messageSender.sendTextMessage(chatId, deleteTransactionId.error, [])
+          return
+        }
+        await messageSender.sendTextMessage(chatId, "Movimiento borrado con éxito", [])
+        await new Promise(resolve => setTimeout(resolve, 800))
+        await messageSender.sendMenu(chatId)
       }
       return;
   }

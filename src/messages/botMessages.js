@@ -128,7 +128,7 @@ export const botReplies = [
   // ! 59
   "🤖\n\nDetalles de la transacción:\n\n📌 *Tipo*: `$type`\n📅 *Fecha*: `$date`\n💰 *Monto*: `$ammount`\n📝 *Detalles*: `$details`\n🏷️ *Categoría*: `$category`",
   // ! 60
-  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.\n\nversion: `1.1.1`",
+  "🤖*Acerca de mí:*\nSoy un proyecto de código abierto creado para hacer más fácil el manejo de tus gastos, ingresos y ahorros. Mi objetivo es brindarte herramientas que te permitan tomar decisiones financieras informadas y tener un mejor control de tu dinero.\n\nversion: `1.2.0`",
   //!61
   "💖 *¡Apóyame!*\nSi te gusta mi trabajo y quieres contribuir al proyecto, puedes hacer un aporte en mi página de donaciones. ¡Tu apoyo es fundamental para seguir mejorando!",
   // ! 62
@@ -148,5 +148,7 @@ export const botReplies = [
   // ! 69
   "❓ MENÚ DE AYUDA ❓\n\n1. ¿Necesito un username?\n2. ¿Cómo creo un username?\n3. ¿Cómo registro un movimiento?\n4. ¿Cómo registro un ahorro?\n5. ¿Qué es una categoría?\n6. ¿Cómo creo o edito una categoría?\n7. ¿Puedo consultar mi historial de movimientos?\n8. ¿Cómo obtengo un resumen de mis finanzas?\n9. ¿Puedo exportar mis datos?\n10. ¿Cómo cambio la zona horaria?",
   // ! 70
-  '¡Hola y bienvenido a *Ahorrin*!\n\nAntes de comenzar, necesitamos que aceptes nuestros Términos y Condiciones y nuestra Política de Privacidad.\n\n🔹 Al hacer clic en *Aceptar*, confirmas que has leído y aceptas estos documentos.'
+  '¡Hola y bienvenido a *Ahorrin*!\n\nAntes de comenzar, necesitamos que aceptes nuestros Términos y Condiciones y nuestra Política de Privacidad.\n\n🔹 Al hacer clic en *Aceptar*, confirmas que has leído y aceptas estos documentos.',
+  // ! 71
+  "⚠️ Confirma que quiere borrar el movimiento\n\n`%transactionname`\n\nEsta Acción no se puede revertir"
 ];
