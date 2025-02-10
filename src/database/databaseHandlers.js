@@ -21,7 +21,7 @@ export async function fetchUsers() {
 }
 
 export async function createNewUser(chatId, userProfile) {
-  let userHasNoUsername = false
+  let userHasNoUsername = false;
   try {
     const {
       first_name,
@@ -32,7 +32,7 @@ export async function createNewUser(chatId, userProfile) {
       user_iv,
     } = userProfile;
     if (!telegram_username) {
-      return {success:false, error:botErrorMessages[2]}
+      return { success: false, error: botErrorMessages[2] };
     }
     const { error } = await supabase.from("users").insert({
       first_name: first_name
@@ -273,12 +273,12 @@ export async function fetchBalanceByMonth(userId, month, type) {
   const user_id = await fetchCurrentUserId(userId);
   try {
     const { data, error } = await supabase
-    .from("records")
-    .select("monto")
-    .gte("created_at", start)
-    .lte("created_at", end)
-    .eq("user_id", user_id)
-    .eq("record_type", type);
+      .from("records")
+      .select("monto")
+      .gte("created_at", start)
+      .lte("created_at", end)
+      .eq("user_id", user_id)
+      .eq("record_type", type);
     if (error) {
       throw error;
     }
@@ -400,7 +400,7 @@ export async function fetchAmmountByCategoriesandMonth(
 
 export async function fetchInitialBalance(userId, month) {
   const { start, end } = getRange(month);
-  let initialBalance = 0
+  let initialBalance = 0;
   try {
     const { data, error } = await supabase
       .from("records")
@@ -412,10 +412,10 @@ export async function fetchInitialBalance(userId, month) {
     if (error) {
       throw error;
     }
-    if (data.length > 0){
-      initialBalance = data[0].monto
+    if (data.length > 0) {
+      initialBalance = data[0].monto;
     }
-    return initialBalance
+    return initialBalance;
   } catch (error) {
     console.log(error);
   }
@@ -453,5 +453,19 @@ export async function editUserTimeZone(userId, newTimeZone) {
       success: false,
       error: "Error actualizando la zona horaria del usuario",
     };
+  }
+}
+
+export async function deleteTransaction(transactionId) {
+  try {
+    const response = await supabase.from("records").delete().eq("id", transactionId);
+    if (response.error){
+      throw response.error;
+    } else {
+      return { success: true, error: "" };
+    }
+  } catch (error) {
+    console.log(error);
+    return { success: false, error: "Error eliminando la transaccion" };
   }
 }
